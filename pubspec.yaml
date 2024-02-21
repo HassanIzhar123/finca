@@ -62,3 +62,12 @@ flutter:
   assets:
     - assets/
     - assets/svg/
+
+  fonts:
+    - family: rubik
+      fonts:
+        - asset: assets/fonts/rubik/rubik.ttf
+
+    - family: nunito
+      fonts:
+        - asset: assets/fonts/nunito/nunito.ttf

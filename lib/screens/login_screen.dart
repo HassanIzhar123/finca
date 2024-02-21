@@ -1,15 +1,17 @@
 import 'package:finca/assets/assets.dart';
+import 'package:finca/utils/app_colors.dart';
+import 'package:finca/utils/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-class WelcomeScreen extends StatefulWidget {
-  const WelcomeScreen({super.key});
+class LogInScreen extends StatefulWidget {
+  const LogInScreen({super.key});
 
   @override
-  State<WelcomeScreen> createState() => _WelcomeScreenState();
+  State<LogInScreen> createState() => _LogInScreenState();
 }
 
-class _WelcomeScreenState extends State<WelcomeScreen> {
+class _LogInScreenState extends State<LogInScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,12 +39,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   height: 5,
                 ),
                 Text(
-                  'FincaAPP',
+                  AppStrings.appName,
                   style: TextStyle(
                     fontSize: 18,
-                    fontFamily: Assets.rubikLight,
+                    fontFamily: Assets.rubik,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF3B3B3B),
+                    color: AppColors.darkGrey,
                   ),
                 ),
               ],
@@ -51,24 +53,24 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               height: 55,
             ),
             Text(
-              'Welcome',
+              AppStrings.welcome,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                fontFamily: Assets.rubikLight,
-                color: const Color(0xFF3B3B3B),
+                fontFamily: Assets.rubik,
+                color: AppColors.darkGrey,
               ),
             ),
             const SizedBox(
               height: 10,
             ),
             Text(
-              'Log in here',
+              AppStrings.loginHere,
               style: TextStyle(
                 fontSize: 14,
-                fontFamily: Assets.rubikLight,
+                fontFamily: Assets.rubik,
                 fontWeight: FontWeight.w300,
-                color: const Color(0xFF3B3B3B),
+                color: AppColors.darkGrey,
               ),
             ),
             const SizedBox(
@@ -87,20 +89,20 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     ),
                   ),
                 ),
-                hintText: "Enter your email",
+                hintText: AppStrings.enterEmail,
                 hintStyle: TextStyle(
                   fontSize: 16,
-                  fontFamily: Assets.rubikLight,
+                  fontFamily: Assets.rubik,
                   fontWeight: FontWeight.w400,
-                  color: const Color(0xFFD2D2D2),
+                  color: AppColors.creamColor,
                 ),
                 border: OutlineInputBorder(
                     borderSide:
-                        const BorderSide(color: Color(0xFFD2D2D2), width: 1.0),
+                        const BorderSide(color: AppColors.creamColor, width: 0),
                     borderRadius: BorderRadius.circular(8.0)),
                 focusedBorder: OutlineInputBorder(
                   borderSide:
-                      const BorderSide(color: Color(0xFFD2D2D2), width: 1.0),
+                      const BorderSide(color: AppColors.creamColor, width: 0),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
               ),
@@ -124,17 +126,17 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 hintText: "Enter your password",
                 hintStyle: TextStyle(
                   fontSize: 16,
-                  fontFamily: Assets.rubikLight,
+                  fontFamily: Assets.rubik,
                   fontWeight: FontWeight.w400,
-                  color: const Color(0xFFD2D2D2),
+                  color: AppColors.creamColor,
                 ),
                 border: OutlineInputBorder(
-                    borderSide:
-                        const BorderSide(color: Color(0xFFD2D2D2), width: 1.0),
+                    borderSide: const BorderSide(
+                        color: AppColors.creamColor, width: 1.0),
                     borderRadius: BorderRadius.circular(8.0)),
                 focusedBorder: OutlineInputBorder(
                   borderSide:
-                      const BorderSide(color: Color(0xFFD2D2D2), width: 1.0),
+                      const BorderSide(color: AppColors.creamColor, width: 1.0),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
               ),
@@ -150,9 +152,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   'Did you forget your password?',
                   style: TextStyle(
                     fontSize: 14,
-                    fontFamily: Assets.rubikLight,
+                    fontFamily: Assets.rubik,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF24B763),
+                    color: AppColors.greenColor,
                   ),
                 ),
               ],
@@ -163,18 +165,20 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             ElevatedButton(
               onPressed: () {},
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF24B763),
+                backgroundColor: AppColors.greenColor,
                 padding: const EdgeInsets.all(15),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
-                textStyle: TextStyle(
+              ),
+              child: Text(
+                AppStrings.login,
+                style: TextStyle(
                   color: Colors.white,
-                  fontFamily: Assets.rubikLight,
+                  fontFamily: Assets.rubik,
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              child: const Text('Login'),
             ),
             const SizedBox(
               height: 10,
@@ -183,12 +187,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'You do not have an account? Sign up',
+                  AppStrings.dntHaveAccount,
                   style: TextStyle(
                     fontSize: 14,
-                    fontFamily: Assets.rubikLight,
+                    fontFamily: Assets.rubik,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF3B3B3B),
+                    color: AppColors.darkGrey,
                   ),
                 ),
               ],
@@ -204,7 +208,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   child: Container(
                     height: 1,
                     decoration: const BoxDecoration(
-                      color: Color(0xFF3B3B3B),
+                      color: AppColors.lightGrey,
                     ),
                   ),
                 ),
@@ -214,12 +218,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       width: 5,
                     ),
                     Text(
-                      'and',
+                      AppStrings.theContinue,
                       style: TextStyle(
-                        fontSize: 14,
-                        fontFamily: Assets.rubikLight,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF3B3B3B),
+                        fontSize: 12,
+                        fontFamily: Assets.nunito,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.darkGrey,
                       ),
                     ),
                     const SizedBox(
@@ -232,7 +236,78 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   child: Container(
                     height: 1,
                     decoration: const BoxDecoration(
-                      color: Color(0xFF3B3B3B),
+                      color: Color(0xFFA0A4A8),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(
+              height: 30,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: () {},
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: const BorderRadius.all(
+                        Radius.circular(12.0),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.2),
+                          spreadRadius: 4,
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        )
+                      ],
+                    ),
+                    child: IconButton(
+                      style: ButtonStyle(
+                        padding: MaterialStateProperty.all(
+                          const EdgeInsets.all(12),
+                        ),
+                      ),
+                      onPressed: () {},
+                      icon: SvgPicture.asset(
+                        Assets.googleLogo,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  width: 15,
+                ),
+                GestureDetector(
+                  onTap: () {},
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1877F2),
+                      borderRadius: const BorderRadius.all(
+                        Radius.circular(12.0),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.2),
+                          spreadRadius: 4,
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        )
+                      ],
+                    ),
+                    child: IconButton(
+                      style: ButtonStyle(
+                        padding: MaterialStateProperty.all(
+                          const EdgeInsets.all(12),
+                        ),
+                      ),
+                      onPressed: () {},
+                      icon: SvgPicture.asset(
+                        Assets.facebookLogo,
+                      ),
                     ),
                   ),
                 ),

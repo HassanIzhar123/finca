@@ -1,4 +1,4 @@
-import 'package:finca/screens/welcome_screen.dart';
+import 'package:finca/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 
 void main() {

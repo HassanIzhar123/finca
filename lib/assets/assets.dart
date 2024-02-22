@@ -13,6 +13,11 @@ class Assets {
   static String calendarIcon = '$_svgDir/calendar_icon.svg';
   static String backIcon = '$_svgDir/back_icon.svg';
   static String menuIcon = '$_svgDir/menu_icon.svg';
+  static String share = '$_svgDir/social_share.svg';
+  static String undo = '$_svgDir/undo.svg';
+  static String delete = '$_svgDir/delete.svg';
+  static String search = '$_svgDir/search.svg';
+  static String closeForm = "$_svgDir/close.svg";
 
   static String rubik = '$_fontDir/rubik/rubik.ttf';
   static String nunito = '$_fontDir/nunito/nunito.ttf';

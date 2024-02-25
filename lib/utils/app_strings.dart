@@ -29,4 +29,15 @@ class AppStrings {
   static const name = "*Name";
   static const size = "*Size";
   static const soilType = "*Soil Type";
+  static const continueText = 'Continue';
+  static const addTheCrops = '*Add the crops';
+  static const addCrops = 'Add crop';
+  static const newCrop = 'New Crop';
+  static const cropName = '*Crop Name:';
+  static const varieties = '*Varieties:';
+  static const scientificName = '*Scientific Name:';
+  static const seedTime = 'Seed Time:';
+  static const sowingStatus = 'Sowing Status:';
+  static const searchScientificName = "Search Scientific Name";
+  static const sowingText = "Sowing";
 }

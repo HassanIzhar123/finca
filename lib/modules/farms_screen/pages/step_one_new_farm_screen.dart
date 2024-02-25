@@ -184,9 +184,7 @@ class _StepOneNewFarmScreenState extends State<StepOneNewFarmScreen> {
         right: 25,
       ),
       color: Colors.green,
-      child: const Expanded(
-        child: Text('Body'),
-      ),
+      child: Text('Body'),
     );
   }
 

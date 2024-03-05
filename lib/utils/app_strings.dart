@@ -40,4 +40,9 @@ class AppStrings {
   static const sowingStatus = 'Sowing Status:';
   static const searchScientificName = "Search Scientific Name";
   static const sowingText = "Sowing";
+  static const maintenance = "maintenance";
+  static const harvest = "Harvest";
+  static const inProgress = 'In progress';
+  static const stepTwoNewFarmDescription = 'Description:';
+  static const keepText = 'Keep';
 }

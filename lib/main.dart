@@ -1,7 +1,13 @@
-import 'package:finca/pages/login_page.dart';
+import 'package:finca/modules/login_page/login_page.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'utils/user_preferences.dart';
+import 'wrappers/firebase_service_wrapper.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await UserPreferences().initPrefs();
+  await FirebaseServiceWrapper().init();
   runApp(const MyApp());
 }
 

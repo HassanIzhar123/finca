@@ -5,6 +5,7 @@ class Assets {
   static const _fontDir = 'assets/fonts';
   static String appIcon = '$_svgDir/farm.svg';
   static String lockIcon = '$_svgDir/lock_icon.svg';
+  static String userIcon = '$_svgDir/user.svg';
   static String emailIcon = '$_svgDir/email_icon.svg';
   static String googleLogo = '$_svgDir/google_logo.svg';
   static String facebookLogo = '$_svgDir/facebook_logo.svg';
@@ -19,10 +20,12 @@ class Assets {
   static String search = '$_svgDir/search.svg';
   static String closeForm = "$_svgDir/close.svg";
   static String addCrops = "$_svgDir/add.svg";
+  static String closeBtn = "$_svgDir/close_btn.svg";
   static String sowingIcon1 = "$_svgDir/sowing_icon1.svg";
   static String sowingIcon2 = "$_svgDir/sowing_icon2.svg";
   static String sowingIcon3 = "$_svgDir/sowing_icon3.svg";
-
+  static String calendar = "$_svgDir/calendar.svg";
   static String rubik = '$_fontDir/rubik/rubik.ttf';
   static String nunito = '$_fontDir/nunito/nunito.ttf';
+  static String eliminate = 'Eliminate';
 }

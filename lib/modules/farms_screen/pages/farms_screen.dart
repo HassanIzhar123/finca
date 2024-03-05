@@ -1,5 +1,6 @@
 import 'package:finca/assets/assets.dart';
 import 'package:finca/models/farms_screen/farm_model.dart';
+import 'package:finca/modules/farms_screen/pages/map_sample.dart';
 import 'package:finca/modules/farms_screen/pages/step_one_new_farm_screen.dart';
 import 'package:finca/modules/farms_screen/views/farm_item.dart';
 import 'package:finca/utils/app_colors.dart';
@@ -56,6 +57,7 @@ class _FarmsScreenState extends State<FarmsScreen> {
                       onPressed: () {
                         Navigator.of(context)
                             .push(MaterialPageRoute(builder: (context) => const StepOneNewFarmScreen()));
+                        // Navigator.of(context).push(MaterialPageRoute(builder: (context) => MapSample()));
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.greenColor,

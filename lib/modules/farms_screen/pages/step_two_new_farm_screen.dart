@@ -8,6 +8,7 @@ import 'package:finca/views/custom_text_field.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class StepTwoNewFarmScreen extends StatefulWidget {
@@ -18,6 +19,17 @@ class StepTwoNewFarmScreen extends StatefulWidget {
 }
 
 class _StepTwoNewFarmScreenState extends State<StepTwoNewFarmScreen> {
+  String name = '';
+  String size = '';
+  Tag selectedSoilType = Tag("Option 1", false);
+  String? description;
+  List<Tag> soilType = [
+    Tag("Option 1", true),
+    Tag("Option 2", false),
+    Tag("Option 3", false),
+    Tag("Option 4", false),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -98,7 +110,15 @@ class _StepTwoNewFarmScreenState extends State<StepTwoNewFarmScreen> {
                       left: 25,
                       right: 10,
                     ),
-                    child: const CustomTextField(name: AppStrings.name, hintText: "Write name")),
+                    child: CustomTextField(
+                      name: AppStrings.name,
+                      hintText: "Write name",
+                      onChange: (text) {
+                        setState(() {
+                          name = text;
+                        });
+                      },
+                    )),
                 const SizedBox(
                   height: 20,
                 ),
@@ -107,7 +127,15 @@ class _StepTwoNewFarmScreenState extends State<StepTwoNewFarmScreen> {
                       left: 25,
                       right: 10,
                     ),
-                    child: const CustomTextField(name: AppStrings.size, hintText: "0000")),
+                    child: CustomTextField(
+                      name: AppStrings.size,
+                      hintText: "0000",
+                      onChange: (text) {
+                        setState(() {
+                          size = text;
+                        });
+                      },
+                    )),
                 const SizedBox(
                   height: 10,
                 ),
@@ -130,21 +158,21 @@ class _StepTwoNewFarmScreenState extends State<StepTwoNewFarmScreen> {
                         ),
                       ),
                       SizedBox(
-                        height: 120,
+                        height: 70,
                         child: TagsView(
-                          postTags: [
-                            Tag("Clay", true),
-                            Tag("Sandy", false),
-                            Tag("Sandy", false),
-                            Tag("Sandy", false),
-                            Tag("Sandy", false),
-                            Tag("Sandy", false),
-                            Tag("Sandy", false),
-                            Tag("Sandy", false),
-                            Tag("Sandy", false),
-                            Tag("Sandy", false),
-                          ],
-                          onTagTapped: (index) {},
+                          postTags: soilType,
+                          onTagTapped: (index) {
+                            setState(() {
+                              for (int i = 0; i < soilType.length; i++) {
+                                if (i == index) {
+                                  soilType[i].isSelected = true;
+                                } else {
+                                  soilType[i].isSelected = false;
+                                }
+                              }
+                              selectedSoilType = soilType[index];
+                            });
+                          },
                         ),
                       ),
                     ],
@@ -158,14 +186,36 @@ class _StepTwoNewFarmScreenState extends State<StepTwoNewFarmScreen> {
                     left: 25,
                     right: 10,
                   ),
-                  child: const CustomTextField(name: AppStrings.size, hintText: "0000"),
+                  child: CustomTextField(
+                    name: AppStrings.stepTwoNewFarmDescription,
+                    hintText: "Write additional description",
+                    onChange: (value) {
+                      setState(() {
+                        description = value;
+                      });
+                    },
+                  ),
                 ),
                 const SizedBox(
                   height: 20,
                 ),
                 GestureDetector(
                   onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(builder: (context) => const StepThreeNewFarmScreen()));
+                    if(name.isEmpty){
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Please enter farm name'),
+                      ));
+                      return;
+                    }
+                    if(size.isEmpty){
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Please enter farm size'),
+                      ));
+                      return;
+                    }
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => StepThreeNewFarmScreen(
+                            name: name, size: size, selectedSoilType: selectedSoilType, description: description)));
                   },
                   child: Container(
                     margin: const EdgeInsets.only(

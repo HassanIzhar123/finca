@@ -1,10 +1,14 @@
+import 'dart:async';
+
 import 'package:finca/assets/assets.dart';
 import 'package:finca/utils/app_colors.dart';
 import 'package:finca/utils/app_strings.dart';
+import 'package:finca/views/custom_text_field.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import 'new_property_save_screen.dart';
 import 'step_two_new_farm_screen.dart';
@@ -17,6 +21,46 @@ class StepOneNewFarmScreen extends StatefulWidget {
 }
 
 class _StepOneNewFarmScreenState extends State<StepOneNewFarmScreen> {
+  final Completer<GoogleMapController> _controller = Completer();
+
+  // on below line we are specifying our camera position
+  static const CameraPosition _kGoogle = CameraPosition(
+    target: LatLng(37.42796133580664, -122.085749655962),
+    zoom: 14.4746,
+  );
+
+  // on below line we have created list of markers
+  List<Marker> _marker = [];
+  final List<Marker> _list = const [
+    // List of Markers Added on Google Map
+    Marker(
+        markerId: MarkerId('1'),
+        position: LatLng(20.42796133580664, 80.885749655962),
+        infoWindow: InfoWindow(
+          title: 'My Position',
+        )),
+
+    Marker(
+        markerId: MarkerId('2'),
+        position: LatLng(25.42796133580664, 80.885749655962),
+        infoWindow: InfoWindow(
+          title: 'Location 1',
+        )),
+
+    Marker(
+        markerId: MarkerId('3'),
+        position: LatLng(20.42796133580664, 73.885749655962),
+        infoWindow: InfoWindow(
+          title: 'Location 2',
+        )),
+  ];
+
+  @override
+  void initState() {
+    _marker.addAll(_list);
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -184,7 +228,35 @@ class _StepOneNewFarmScreenState extends State<StepOneNewFarmScreen> {
         right: 25,
       ),
       color: Colors.green,
-      child: Text('Body'),
+      child: GoogleMap(
+        // on below line setting camera position
+        initialCameraPosition: _kGoogle,
+        // on below line specifying map type.
+        mapType: MapType.normal,
+        // on below line setting user location enabled.
+        myLocationEnabled: true,
+        // on below line setting compass enabled.
+        compassEnabled: true,
+        // on below line specifying controller on map complete.
+        onMapCreated: (GoogleMapController controller) {
+          _controller.complete(controller);
+        },
+        polylines: {
+          Polyline(
+            polylineId: PolylineId('1'),
+            color: Colors.black,
+            width: 2,
+            patterns: [
+              PatternItem.dash(8),
+              // PatternItem.gap(15),
+            ],
+            points: const [
+              LatLng(37.42796133580664, -122.085749655962),
+              LatLng(36.42796133580664, -123.08575),
+            ],
+          ),
+        },
+      ),
     );
   }
 

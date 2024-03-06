@@ -1,17 +1,30 @@
+import 'dart:developer';
+
 import 'package:finca/assets/assets.dart';
+import 'package:finca/cubits/new_Crop/new_crop_cubit.dart';
+import 'package:finca/cubits/new_Crop/new_crop_state.dart';
+import 'package:finca/enums/sowing_enum.dart';
 import 'package:finca/modules/farms_screen/models/crop/Crop.dart';
 import 'package:finca/modules/farms_screen/models/tag.dart';
 import 'package:finca/modules/farms_screen/pages/new_crop_screen.dart';
 import 'package:finca/modules/farms_screen/pages/step_four_new_farm.dart';
 import 'package:finca/utils/app_colors.dart';
 import 'package:finca/utils/app_strings.dart';
+import 'package:finca/utils/collection_refs.dart';
+import 'package:finca/utils/user_preferences.dart';
+import 'package:finca/views/step_progress_view.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class StepThreeNewFarmScreen extends StatefulWidget {
   const StepThreeNewFarmScreen(
-      {super.key, required this.name, required this.size, required this.selectedSoilType, this.description});
+      {super.key,
+      required this.name,
+      required this.size,
+      required this.selectedSoilType,
+      this.description});
 
   final String name;
   final String size;
@@ -23,345 +36,524 @@ class StepThreeNewFarmScreen extends StatefulWidget {
 }
 
 class _StepThreeNewFarmScreenState extends State<StepThreeNewFarmScreen> {
-  double _currentSliderValue = 0;
   List<Crop> crops = [];
+
+  final _stepsText = ["Sowing", "In Progress", "Harvest"];
+
+  final _stepCircleRadius = 5.0;
+
+  final _stepProgressViewHeight = 60.0;
+
+  final Color _activeColor = AppColors.greenColor;
+
+  final Color _inactiveColor = Colors.grey;
+
+  final TextStyle _stepStyle =
+      const TextStyle(fontSize: 12.0, fontWeight: FontWeight.bold);
+  bool isCropDeleting = false;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: constraints.maxHeight,
-                ),
-                child: Container(
-                  margin: const EdgeInsets.only(
-                    left: 7,
-                    right: 20,
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Column(
+    return BlocProvider(
+      create: (BuildContext context) => NewCropCubit(),
+      child:
+          BlocConsumer<NewCropCubit, NewCropState>(listener: (context, state) {
+        log("state: $state");
+        if (state is NewCropLoadingState) {
+          isLoading = true;
+        } else if (state is NewCropSuccessState) {
+          isLoading = false;
+          Navigator.pop(context);
+        } else if (state is NewCropFailedState) {
+          isLoading = false;
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+            ),
+          );
+        } else if (state is DeleteCropLoadingState) {
+          isCropDeleting = false;
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+            ),
+          );
+        } else if (state is DeleteCropFailedState) {
+          isCropDeleting = false;
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+            ),
+          );
+        } else if (state is DeleteCropFailedState) {
+          isCropDeleting = false;
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+            ),
+          );
+        }
+      }, builder: (context, state) {
+        return Scaffold(
+          body: SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: Container(
+                      margin: const EdgeInsets.only(
+                        left: 7,
+                        right: 20,
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.only(
-                              top: 10,
-                              bottom: 15,
-                            ),
-                            decoration: const BoxDecoration(
-                              color: AppColors.white,
-                              borderRadius: BorderRadius.only(
-                                bottomLeft: Radius.circular(
-                                  10,
+                        children: <Widget>[
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.only(
+                                  top: 10,
+                                  bottom: 15,
                                 ),
-                                bottomRight: Radius.circular(
-                                  10,
-                                ),
-                              ),
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Column(
-                                  children: [
-                                    const SizedBox(
-                                      height: 8,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.white,
+                                  borderRadius: BorderRadius.only(
+                                    bottomLeft: Radius.circular(
+                                      10,
                                     ),
-                                    SvgPicture.asset(Assets.backIcon),
-                                  ],
+                                    bottomRight: Radius.circular(
+                                      10,
+                                    ),
+                                  ),
                                 ),
-                                const SizedBox(
-                                  width: 10,
-                                ),
-                                Column(
+                                child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      AppStrings.newFarm,
-                                      style: TextStyle(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.greenColor,
-                                        fontFamily: Assets.rubik,
-                                      ),
+                                    Column(
+                                      children: [
+                                        const SizedBox(
+                                          height: 8,
+                                        ),
+                                        SvgPicture.asset(Assets.backIcon),
+                                      ],
                                     ),
-                                    Text(
-                                      AppStrings.stepThree,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.darkGrey,
-                                        fontFamily: Assets.rubik,
-                                      ),
+                                    const SizedBox(
+                                      width: 10,
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          AppStrings.newFarm,
+                                          style: TextStyle(
+                                            fontSize: 24,
+                                            fontWeight: FontWeight.w700,
+                                            color: AppColors.greenColor,
+                                            fontFamily: Assets.rubik,
+                                          ),
+                                        ),
+                                        Text(
+                                          AppStrings.stepThree,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.darkGrey,
+                                            fontFamily: Assets.rubik,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 10,
+                              ),
+                              const SizedBox(
+                                height: 10,
+                              ),
+                              Container(
+                                margin: const EdgeInsets.only(
+                                  left: 15,
+                                  right: 20,
+                                ),
+                                child: Text(
+                                  AppStrings.addTheCrops,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.darkGrey,
+                                    fontFamily: Assets.rubik,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(
+                                height: 15,
+                              ),
+                              CupertinoButton(
+                                onPressed: () {
+                                  Navigator.of(context).push(MaterialPageRoute(
+                                      builder: (context) =>
+                                          const NewCropScreen()));
+                                },
+                                padding: EdgeInsets.zero,
+                                child: Container(
+                                  width: MediaQuery.of(context).size.width,
+                                  padding: const EdgeInsets.all(10),
+                                  margin: const EdgeInsets.only(
+                                    left: 20,
+                                    right: 10,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.lightGrey,
+                                    borderRadius: BorderRadius.circular(
+                                      25,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      SvgPicture.asset(
+                                        Assets.addCrops,
+                                      ),
+                                      const SizedBox(
+                                        height: 10,
+                                      ),
+                                      Text(
+                                        AppStrings.addCrops,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.darkGrey,
+                                          fontFamily: Assets.rubik,
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              cropsList(),
+                            ],
                           ),
                           Container(
                             margin: const EdgeInsets.only(
-                              left: 15,
-                              right: 20,
+                              top: 20,
+                              bottom: 20,
                             ),
-                            child: Text(
-                              AppStrings.addTheCrops,
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.darkGrey,
-                                fontFamily: Assets.rubik,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 15,
-                          ),
-                          CupertinoButton(
-                            onPressed: () {
-                              Navigator.of(context)
-                                  .push(MaterialPageRoute(builder: (context) => const NewCropScreen()));
-                            },
-                            padding: EdgeInsets.zero,
-                            child: Container(
-                              width: MediaQuery.of(context).size.width,
-                              padding: const EdgeInsets.all(10),
-                              margin: const EdgeInsets.only(
-                                left: 20,
-                                right: 10,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.lightGrey,
-                                borderRadius: BorderRadius.circular(
-                                  25,
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (context) =>
+                                        StepFourNewFarmScreen()));
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(
+                                  left: 25,
+                                  right: 10,
                                 ),
-                              ),
-                              child: Column(
-                                children: [
-                                  SvgPicture.asset(
-                                    Assets.addCrops,
+                                padding: const EdgeInsets.only(
+                                  top: 10,
+                                  bottom: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.greenColor,
+                                  borderRadius: BorderRadius.circular(
+                                    10,
                                   ),
-                                  const SizedBox(
-                                    height: 10,
-                                  ),
-                                  Text(
-                                    AppStrings.addCrops,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    AppStrings.continueText,
                                     style: TextStyle(
                                       fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.darkGrey,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.white,
                                       fontFamily: Assets.rubik,
                                     ),
-                                  )
-                                ],
-                              ),
-                            ),
-                          ),
-                          cropsList(),
-                        ],
-                      ),
-                      Container(
-                        margin: const EdgeInsets.only(
-                          bottom: 20,
-                        ),
-                        child: GestureDetector(
-                          onTap: () {
-                            // Navigator.of(context).push(MaterialPageRoute(builder: (context) => const NewCropScreen()));
-                            Navigator.of(context)
-                                .push(MaterialPageRoute(builder: (context) => StepFourNewFarmScreen()));
-                          },
-                          child: Container(
-                            margin: const EdgeInsets.only(
-                              left: 25,
-                              right: 10,
-                            ),
-                            padding: const EdgeInsets.only(
-                              top: 10,
-                              bottom: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.greenColor,
-                              borderRadius: BorderRadius.circular(
-                                10,
-                              ),
-                            ),
-                            child: Center(
-                              child: Text(
-                                AppStrings.continueText,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.white,
-                                  fontFamily: Assets.rubik,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-            );
-          },
-        ),
-      ),
+                );
+              },
+            ),
+          ),
+        );
+      }),
     );
   }
 
   Widget cropsList() {
-    return ListView.builder(
-        shrinkWrap: true,
-        itemCount: crops.length,
-        itemBuilder: (context, index) {
-          return Container(
-            margin: const EdgeInsets.only(
-              top: 20,
-              left: 20,
-              right: 10,
-            ),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(
-                10,
-              ),
-              color: AppColors.lightGrey,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(10),
-                        bottomRight: Radius.circular(10),
-                      ),
-                      child: Image.network(
-                        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSVkDF8i8wPSCO875Sj0ZDB8GFcVntXNlnb0Q&usqp=CAU',
-                        height: 100.0,
-                        width: 100.0,
-                        fit: BoxFit.fill,
-                      ),
+    return StreamBuilder(
+        stream: state is NewCropSuccessState ?state.cropsStream,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CupertinoActivityIndicator());
+          }
+          if (snapshot.hasData) {
+            crops = snapshot.data?.docs
+                    .map((doc) => Crop.fromJson(doc.data()))
+                    .toList() ??
+                [];
+            return ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: crops.length,
+                itemBuilder: (context, index) {
+                  return Container(
+                    margin: const EdgeInsets.only(
+                      top: 20,
+                      left: 20,
+                      right: 10,
                     ),
-                    Column(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(
+                        10,
+                      ),
+                      color: AppColors.lightGrey,
+                    ),
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Container(
-                          margin: const EdgeInsets.only(
-                            left: 10,
-                            right: 10,
-                          ),
-                          padding: const EdgeInsets.only(
-                            top: 10,
-                            bottom: 10,
-                          ),
-                          child: Text(
-                            'Crop name',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.darkGrey,
-                              fontFamily: Assets.rubik,
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ClipRRect(
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(10),
+                                bottomRight: Radius.circular(10),
+                              ),
+                              child: Image.network(
+                                'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSVkDF8i8wPSCO875Sj0ZDB8GFcVntXNlnb0Q&usqp=CAU',
+                                height: 100.0,
+                                width: 100.0,
+                                fit: BoxFit.fill,
+                              ),
                             ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    margin: const EdgeInsets.only(
+                                      left: 10,
+                                      right: 10,
+                                    ),
+                                    padding: const EdgeInsets.only(
+                                      top: 10,
+                                      // bottom: 10,
+                                    ),
+                                    child: Text(
+                                      crops[index].cropName,
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.darkGrey,
+                                        fontFamily: Assets.rubik,
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    margin: const EdgeInsets.only(
+                                      left: 10,
+                                      right: 10,
+                                    ),
+                                    child: Text(
+                                      '#Property name',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w400,
+                                        color: AppColors.darkGrey,
+                                        fontFamily: Assets.rubik,
+                                      ),
+                                    ),
+                                  ),
+                                  // Flexible(
+                                  //   child: Wrap(
+                                  //     children: List.generate(
+                                  //       Random().nextInt(5) + 1,
+                                  //       (_) => SizedBox(width: 50, height: 50),
+                                  //     ),
+                                  //   ),
+                                  // ),
+                                  Container(
+                                    margin: const EdgeInsets.only(
+                                      left: 10,
+                                      top: 10,
+                                    ),
+                                    height: 25,
+                                    child: ListView(
+                                      shrinkWrap: true,
+                                      scrollDirection: Axis.horizontal,
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      children: crops[index]
+                                          .varieties
+                                          .map((variety) =>
+                                              VarietyView(varietyName: variety))
+                                          .toList(),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 20,
+                        ),
+                        StepProgressView(
+                          _stepsText,
+                          (SowingEnum.values.indexOf(crops[index].sowing)) + 1,
+                          _stepProgressViewHeight,
+                          MediaQuery.of(context).size.width,
+                          _stepCircleRadius,
+                          _activeColor,
+                          _inactiveColor,
+                          _stepStyle,
+                          decoration:
+                              const BoxDecoration(color: AppColors.lightGrey),
+                          padding: const EdgeInsets.only(
+                            // top: 48.0,
+                            left: 24.0,
+                            right: 24.0,
                           ),
                         ),
                         Container(
                           margin: const EdgeInsets.only(
-                            left: 10,
-                            right: 10,
+                            left: 20,
+                            right: 20,
                           ),
-                          child: Text(
-                            '#Property name',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                              color: AppColors.darkGrey,
-                              fontFamily: Assets.rubik,
-                            ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.max,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        SvgPicture.asset(Assets.calendar),
+                                        const SizedBox(
+                                          width: 5,
+                                        ),
+                                        Text(
+                                          crops[index].seedTime.toString(),
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w400,
+                                            color: AppColors.darkGrey,
+                                            fontFamily: Assets.rubik,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(
+                                      height: 10,
+                                    ),
+                                    Container(
+                                      decoration: const BoxDecoration(
+                                          color: AppColors.darkGrey),
+                                      height: 0.5,
+                                    ),
+                                    const SizedBox(
+                                      height: 10,
+                                    ),
+                                    GestureDetector(
+                                      onTap: isCropDeleting
+                                          ? null
+                                          : () {
+                                              context
+                                                  .read<NewCropCubit>()
+                                                  .deleteSpecificCrop(
+                                                      crops[index]);
+                                            },
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.max,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          SvgPicture.asset(
+                                            Assets.delete,
+                                            color: AppColors.red,
+                                          ),
+                                          const SizedBox(
+                                            width: 5,
+                                          ),
+                                          Text(
+                                            Assets.eliminate,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w400,
+                                              color: AppColors.red,
+                                              fontFamily: Assets.rubik,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
+                        ),
+                        const SizedBox(
+                          height: 20,
                         ),
                       ],
                     ),
-                  ],
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                Container(
-                  margin: const EdgeInsets.only(
-                    left: 20,
-                    right: 20,
-                  ),
-                  child: Row(
-                    children: [
-                      Column(
-                        children: [
-                          Row(
-                            children: [
-                              SvgPicture.asset(Assets.calendar),
-                              Text(
-                                '12/12/12',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w400,
-                                  color: AppColors.darkGrey,
-                                  fontFamily: Assets.rubik,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          const Divider(
-                            color: AppColors.darkGrey,
-                            height: 3,
-                            thickness: 3,
-                          ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          Row(
-                            children: [
-                              SvgPicture.asset(
-                                Assets.delete,
-                                color: AppColors.red,
-                              ),
-                              Text(
-                                Assets.eliminate,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w400,
-                                  color: AppColors.darkGrey,
-                                  fontFamily: Assets.rubik,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-              ],
-            ),
-          );
+                  );
+                });
+          }
+          return const SizedBox();
         });
+  }
+}
+
+class VarietyView extends StatelessWidget {
+  const VarietyView({super.key, required this.varietyName});
+
+  final String varietyName;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        color: AppColors.purple,
+      ),
+      margin: const EdgeInsets.only(
+        // left: 10,
+        right: 10,
+      ),
+      padding: const EdgeInsets.only(
+        top: 3,
+        bottom: 3,
+        left: 10,
+        right: 10,
+      ),
+      child: Text(
+        varietyName,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: AppColors.white,
+          fontFamily: Assets.rubik,
+        ),
+      ),
+    );
   }
 }

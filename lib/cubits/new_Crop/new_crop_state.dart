@@ -15,12 +15,30 @@ class NewCropLoadingState extends NewCropState {}
 
 class NewCropSuccessState extends NewCropState {
   final bool isAdded;
+  final Stream cropStream;
 
-  const NewCropSuccessState(this.isAdded);
+  const NewCropSuccessState(
+    this.isAdded,
+    this.cropStream,
+  );
 }
 
 class NewCropFailedState extends NewCropState {
   final String message;
 
   const NewCropFailedState(this.message);
+}
+
+class DeleteCropLoadingState extends NewCropState {}
+
+class DeleteCropSuccessState extends NewCropState {
+  final bool isAdded;
+
+  const DeleteCropSuccessState(this.isAdded);
+}
+
+class DeleteCropFailedState extends NewCropState {
+  final String message;
+
+  const DeleteCropFailedState(this.message);
 }

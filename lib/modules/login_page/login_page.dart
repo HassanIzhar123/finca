@@ -4,10 +4,10 @@ import 'package:finca/assets/assets.dart';
 import 'package:finca/cubits/login/login_cubit.dart';
 import 'package:finca/cubits/login/login_state.dart';
 import 'package:finca/modules/home_page/home_page.dart';
-import 'package:finca/modules/LogIn_page/LogIn_page.dart';
 import 'package:finca/modules/signup_page/signup_page.dart';
 import 'package:finca/utils/app_colors.dart';
 import 'package:finca/utils/app_strings.dart';
+import 'package:finca/views/custom_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -23,6 +23,7 @@ class _LogInPageState extends State<LogInPage> {
   bool isLoading = false;
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+  String email = '', password = '';
 
   @override
   Widget build(BuildContext context) {
@@ -36,9 +37,9 @@ class _LogInPageState extends State<LogInPage> {
         } else if (state is LogInSuccessState) {
           isLoading = false;
           if (state.authModel != null) {
-            log(state.authModel.toString());
             Navigator.pop(context);
-            Navigator.of(context).push(MaterialPageRoute(builder: (context) => const HomePage()));
+            Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const HomePage()));
           }
         } else if (state is LogInFailedState) {
           isLoading = false;
@@ -89,66 +90,30 @@ class _LogInPageState extends State<LogInPage> {
                   const SizedBox(
                     height: 35,
                   ),
-                  TextField(
-                    controller: emailController,
-                    decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
-                      prefixIcon: SizedBox(
-                        height: 10,
-                        width: 10,
-                        child: Center(
-                          child: SvgPicture.asset(
-                            Assets.emailIcon,
-                          ),
-                        ),
-                      ),
-                      hintText: AppStrings.enterEmail,
-                      hintStyle: TextStyle(
-                        fontSize: 16,
-                        fontFamily: Assets.rubik,
-                        fontWeight: FontWeight.w400,
-                        color: AppColors.creamColor,
-                      ),
-                      border: OutlineInputBorder(
-                          borderSide: const BorderSide(color: AppColors.creamColor, width: 0),
-                          borderRadius: BorderRadius.circular(8.0)),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: const BorderSide(color: AppColors.creamColor, width: 0),
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                    ),
+                  CustomTextField(
+                    name: '',
+                    hintText: AppStrings.enterEmail,
+                    showName: false,
+                    multiLine: false,
+                    onChange: (value) {
+                      setState(() {
+                        email = value;
+                      });
+                    },
                   ),
                   const SizedBox(
                     height: 15,
                   ),
-                  TextField(
-                    controller: passwordController,
-                    decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
-                      prefixIcon: SizedBox(
-                        height: 10,
-                        width: 10,
-                        child: Center(
-                          child: SvgPicture.asset(
-                            Assets.lockIcon,
-                          ),
-                        ),
-                      ),
-                      hintText: "Enter your password",
-                      hintStyle: TextStyle(
-                        fontSize: 16,
-                        fontFamily: Assets.rubik,
-                        fontWeight: FontWeight.w400,
-                        color: AppColors.creamColor,
-                      ),
-                      border: OutlineInputBorder(
-                          borderSide: const BorderSide(color: AppColors.creamColor, width: 1.0),
-                          borderRadius: BorderRadius.circular(8.0)),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: const BorderSide(color: AppColors.creamColor, width: 1.0),
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                    ),
+                  CustomTextField(
+                    name: '',
+                    hintText: AppStrings.enterPassword,
+                    showName: false,
+                    multiLine: false,
+                    onChange: (value) {
+                      setState(() {
+                        password = value;
+                      });
+                    },
                   ),
                   const SizedBox(
                     height: 15,
@@ -175,7 +140,9 @@ class _LogInPageState extends State<LogInPage> {
                     onPressed: isLoading
                         ? null
                         : () {
-                            context.read<LogInCubit>().logInUser(emailController.text, passwordController.text);
+                            context
+                                .read<LogInCubit>()
+                                .logInUser(email, password);
                           },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.greenColor,
@@ -201,7 +168,8 @@ class _LogInPageState extends State<LogInPage> {
                     children: [
                       GestureDetector(
                         onTap: () {
-                          Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SignUpPage()));
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => const SignUpPage()));
                         },
                         child: Text(
                           AppStrings.dntHaveAccount,

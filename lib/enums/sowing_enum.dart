@@ -1,2 +1,9 @@
-//make enum
-enum SowingEnum { sowing, maintenance, harvest }
+enum SowingEnum {
+  sowing('sowing'),
+  maintenance('maintenance'),
+  harvest('harvest');
+
+  const SowingEnum(this.name);
+
+  final String name;
+}

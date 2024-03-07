@@ -63,8 +63,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 // }
 
 class UserPreferences {
-  static Future<SharedPreferences> get _instance async =>
-      _prefsInstance ??= await SharedPreferences.getInstance();
+  static Future<SharedPreferences> get _instance async => _prefsInstance ??= await SharedPreferences.getInstance();
   static SharedPreferences? _prefsInstance;
 
   // call this method from iniState() function of mainApp().
@@ -88,10 +87,13 @@ class UserPreferences {
     await prefs.setString('user_info', jsonString);
   }
 
-  AuthModel getUserInfo() {
+  AuthModel? getUserInfo() {
     String jsonString = _prefsInstance?.getString('user_info') ?? '{}';
     Map<String, dynamic> userMap = jsonDecode(jsonString);
-    return AuthModel.fromJson(userMap);
+    if (userMap.isNotEmpty) {
+      return AuthModel.fromJson(userMap);
+    }
+    return null;
   }
 
   String getUid() {

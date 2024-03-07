@@ -87,23 +87,23 @@ class _FarmsScreenState extends State<FarmsScreen> {
             const SizedBox(
               height: 10,
             ),
-            ListView.builder(
-              shrinkWrap: true,
-              itemCount: 5,
-              physics: const BouncingScrollPhysics(),
-              itemBuilder: (context, index) {
-                return FarmItem(
-                  index: index,
-                  itemSize: 5,
-                  farmModel: FarmModel(
-                      title: "Hey",
-                      description: "hi",
-                      location: "pak",
-                      image:
-                          "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSVkDF8i8wPSCO875Sj0ZDB8GFcVntXNlnb0Q&usqp=CAU"),
-                );
-              },
-            ),
+            // ListView.builder(
+            //   shrinkWrap: true,
+            //   itemCount: 5,
+            //   physics: const BouncingScrollPhysics(),
+            //   itemBuilder: (context, index) {
+            //     return FarmItem(
+            //       index: index,
+            //       itemSize: 5,
+            //       farmModel: FarmModel(
+            //           title: "Hey",
+            //           description: "hi",
+            //           location: "pak",
+            //           image:
+            //               "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSVkDF8i8wPSCO875Sj0ZDB8GFcVntXNlnb0Q&usqp=CAU"),
+            //     );
+            //   },
+            // ),
           ],
         ),
       ),

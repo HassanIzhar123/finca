@@ -20,11 +20,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 class StepThreeNewFarmScreen extends StatefulWidget {
   const StepThreeNewFarmScreen(
-      {super.key,
-      required this.name,
-      required this.size,
-      required this.selectedSoilType,
-      this.description});
+      {super.key, required this.name, required this.size, required this.selectedSoilType, this.description});
 
   final String name;
   final String size;
@@ -48,46 +44,27 @@ class _StepThreeNewFarmScreenState extends State<StepThreeNewFarmScreen> {
 
   final Color _inactiveColor = Colors.grey;
 
-  final TextStyle _stepStyle =
-      const TextStyle(fontSize: 12.0, fontWeight: FontWeight.bold);
+  final TextStyle _stepStyle = const TextStyle(fontSize: 12.0, fontWeight: FontWeight.bold);
   bool isCropDeleting = false;
+  Stream<List<Crop>> cropsStream = const Stream<List<Crop>>.empty();
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (BuildContext context) => NewCropCubit(),
-      child:
-          BlocConsumer<NewCropCubit, NewCropState>(listener: (context, state) {
-        log("state: $state");
-        if (state is NewCropLoadingState) {
-          isLoading = true;
-        } else if (state is NewCropSuccessState) {
-          isLoading = false;
-          Navigator.pop(context);
-        } else if (state is NewCropFailedState) {
-          isLoading = false;
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-            ),
-          );
+      create: (BuildContext context) {
+        log("hi i am here");
+        return NewCropCubit()..getAllCrops();
+      },
+      child: BlocConsumer<NewCropCubit, NewCropState>(listener: (context, state) {
+        log("stepthreestate: $state");
+        if (state is AllCropLoadingState) {
+        } else if (state is AllCropSuccessState) {
+          cropsStream = state.cropStream;
+        } else if (state is AllCropFailedState) {
         } else if (state is DeleteCropLoadingState) {
+          isCropDeleting = true;
+        } else if (state is DeleteCropSuccessState) {
           isCropDeleting = false;
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-            ),
-          );
-        } else if (state is DeleteCropFailedState) {
-          isCropDeleting = false;
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-            ),
-          );
         } else if (state is DeleteCropFailedState) {
           isCropDeleting = false;
           Navigator.pop(context);
@@ -150,8 +127,7 @@ class _StepThreeNewFarmScreenState extends State<StepThreeNewFarmScreen> {
                                       width: 10,
                                     ),
                                     Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           AppStrings.newFarm,
@@ -199,9 +175,8 @@ class _StepThreeNewFarmScreenState extends State<StepThreeNewFarmScreen> {
                               ),
                               CupertinoButton(
                                 onPressed: () {
-                                  Navigator.of(context).push(MaterialPageRoute(
-                                      builder: (context) =>
-                                          const NewCropScreen()));
+                                  Navigator.of(context)
+                                      .push(MaterialPageRoute(builder: (context) => const NewCropScreen()));
                                 },
                                 padding: EdgeInsets.zero,
                                 child: Container(
@@ -238,7 +213,7 @@ class _StepThreeNewFarmScreenState extends State<StepThreeNewFarmScreen> {
                                   ),
                                 ),
                               ),
-                              cropsList(),
+                              cropsList(state is AllCropSuccessState ? state.cropStream : const Stream.empty()),
                             ],
                           ),
                           Container(
@@ -248,9 +223,8 @@ class _StepThreeNewFarmScreenState extends State<StepThreeNewFarmScreen> {
                             ),
                             child: GestureDetector(
                               onTap: () {
-                                Navigator.of(context).push(MaterialPageRoute(
-                                    builder: (context) =>
-                                        StepFourNewFarmScreen()));
+                                Navigator.of(context)
+                                    .push(MaterialPageRoute(builder: (context) => StepFourNewFarmScreen()));
                               },
                               child: Container(
                                 margin: const EdgeInsets.only(
@@ -294,18 +268,22 @@ class _StepThreeNewFarmScreenState extends State<StepThreeNewFarmScreen> {
     );
   }
 
-  Widget cropsList() {
+  Widget cropsList(Stream<List<Crop>> cropsStream) {
+    final userInfo = UserPreferences().getUserInfo();
+    // if (userInfo?.uid == null) {
+    //   return const SizedBox();
+    // }
+    log("uidValueCheck: ${userInfo?.uid}");
     return StreamBuilder(
-        stream: state is NewCropSuccessState ?state.cropsStream,
+        stream: cropsStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CupertinoActivityIndicator());
           }
+          log('snapshot.hasData: ${snapshot.hasData}');
           if (snapshot.hasData) {
-            crops = snapshot.data?.docs
-                    .map((doc) => Crop.fromJson(doc.data()))
-                    .toList() ??
-                [];
+            log("crops: ${snapshot.data.toString()}");
+            crops = snapshot.data??[];
             return ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -398,12 +376,10 @@ class _StepThreeNewFarmScreenState extends State<StepThreeNewFarmScreen> {
                                     child: ListView(
                                       shrinkWrap: true,
                                       scrollDirection: Axis.horizontal,
-                                      physics:
-                                          const NeverScrollableScrollPhysics(),
+                                      physics: const NeverScrollableScrollPhysics(),
                                       children: crops[index]
                                           .varieties
-                                          .map((variety) =>
-                                              VarietyView(varietyName: variety))
+                                          .map((variety) => VarietyView(varietyName: variety))
                                           .toList(),
                                     ),
                                   ),
@@ -424,8 +400,7 @@ class _StepThreeNewFarmScreenState extends State<StepThreeNewFarmScreen> {
                           _activeColor,
                           _inactiveColor,
                           _stepStyle,
-                          decoration:
-                              const BoxDecoration(color: AppColors.lightGrey),
+                          decoration: const BoxDecoration(color: AppColors.lightGrey),
                           padding: const EdgeInsets.only(
                             // top: 48.0,
                             left: 24.0,
@@ -464,8 +439,7 @@ class _StepThreeNewFarmScreenState extends State<StepThreeNewFarmScreen> {
                                       height: 10,
                                     ),
                                     Container(
-                                      decoration: const BoxDecoration(
-                                          color: AppColors.darkGrey),
+                                      decoration: const BoxDecoration(color: AppColors.darkGrey),
                                       height: 0.5,
                                     ),
                                     const SizedBox(
@@ -475,15 +449,11 @@ class _StepThreeNewFarmScreenState extends State<StepThreeNewFarmScreen> {
                                       onTap: isCropDeleting
                                           ? null
                                           : () {
-                                              context
-                                                  .read<NewCropCubit>()
-                                                  .deleteSpecificCrop(
-                                                      crops[index]);
+                                              context.read<NewCropCubit>().deleteSpecificCrop(crops[index]);
                                             },
                                       child: Row(
                                         mainAxisSize: MainAxisSize.max,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
+                                        mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
                                           SvgPicture.asset(
                                             Assets.delete,

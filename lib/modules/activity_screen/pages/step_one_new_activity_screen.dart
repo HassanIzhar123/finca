@@ -1,6 +1,6 @@
 import 'package:finca/assets/assets.dart';
 import 'package:finca/modules/farms_screen/pages/step_three_new_farm_screen.dart';
-import 'package:finca/modules/farms_screen/pages/step_two_new_activity_screen.dart';
+import 'package:finca/modules/activity_screen/pages/step_two_new_activity_screen.dart';
 import 'package:finca/utils/app_colors.dart';
 import 'package:finca/utils/app_strings.dart';
 import 'package:finca/views/custom_text_field.dart';
@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class StepOneNewActivity extends StatefulWidget {
+  const StepOneNewActivity({super.key});
+
   @override
   _StepOneNewActivityState createState() => _StepOneNewActivityState();
 }
@@ -16,6 +18,10 @@ class StepOneNewActivity extends StatefulWidget {
 class _StepOneNewActivityState extends State<StepOneNewActivity> {
   final List<String> soilStudies = ['Soil Study 1', 'Soil Study 2', 'Soil Study 3'];
   final List<String> certifications = ['Certification 1', 'Certification 2', 'Certification 3'];
+  DateTime startDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  DateTime startTime = DateTime(0, 0, 0, DateTime.now().hour, DateTime.now().minute, DateTime.now().second);
+  DateTime endDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  DateTime endTime = DateTime(0, 0, 0, DateTime.now().hour, DateTime.now().minute, DateTime.now().second);
 
   @override
   Widget build(BuildContext context) {
@@ -49,9 +55,17 @@ class _StepOneNewActivityState extends State<StepOneNewActivity> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                const CustomTextField(name: '*Start date', hintText: "Select Date"),
+                _buildDatePicker('*Start date', (value) {
+                  setState(() {
+                    startDate = value;
+                  });
+                }),
                 const SizedBox(height: 20),
-                const CustomTextField(name: '*Start Time', hintText: "Select Time"),
+                _buildTimePicker('*Start Time', (value) {
+                  setState(() {
+                    startTime = value;
+                  });
+                }),
                 ListTile(
                   title: const Text('Option 1'),
                   leading: Radio<int>(
@@ -67,9 +81,17 @@ class _StepOneNewActivityState extends State<StepOneNewActivity> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                const CustomTextField(name: '*End date', hintText: "Select Date"),
+                _buildDatePicker('*End date', (value) {
+                  setState(() {
+                    endDate = value;
+                  });
+                }),
                 const SizedBox(height: 20),
-                const CustomTextField(name: '*Start Time', hintText: "Select Date"),
+                _buildTimePicker('*End Time', (value) {
+                  setState(() {
+                    endTime = value;
+                  });
+                }),
                 const SizedBox(height: 20),
                 GestureDetector(
                   onTap: () {
@@ -105,6 +127,35 @@ class _StepOneNewActivityState extends State<StepOneNewActivity> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDatePicker(String title, Function(DateTime) onDateSelected) {
+    return CustomTextField(
+      name: title,
+      hintText: "Select date",
+      borderColor: const Color(0xFFD9D9D9),
+      icon: Assets.calendarIcon,
+      iconOnLeft: false,
+      isCalendarPicker: true,
+      onDateSelected: (selectedDate) {
+        onDateSelected(selectedDate);
+      },
+    );
+  }
+
+  Widget _buildTimePicker(String title, Function(DateTime) onDateSelected) {
+    return CustomTextField(
+      name: title,
+      hintText: "Select Time",
+      borderColor: const Color(0xFFD9D9D9),
+      icon: Assets.calendarIcon,
+      iconOnLeft: false,
+      isCalendarPicker: true,
+      isDatePicker: false,
+      onDateSelected: (selectedDate) {
+        onDateSelected(selectedDate);
+      },
     );
   }
 }

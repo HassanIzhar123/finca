@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: (UserPreferences().getUserInfo().uid == null)
+      home: (UserPreferences().getUserInfo()?.uid == null)
           ? const LogInPage()
           : const HomePage(),
     );

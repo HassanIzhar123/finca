@@ -4,8 +4,12 @@ import 'package:finca/utils/app_strings.dart';
 import 'package:finca/views/custom_text_field.dart';
 import 'package:flutter/material.dart';
 
+import 'step_three_remaining_new_activity.dart';
+
 class StepThreeNewActivityScreen extends StatelessWidget {
-  const StepThreeNewActivityScreen({super.key});
+  const StepThreeNewActivityScreen({super.key, required this.selectedActivityType});
+
+  final String selectedActivityType;
 
   @override
   Widget build(BuildContext context) {
@@ -15,6 +19,7 @@ class StepThreeNewActivityScreen extends StatelessWidget {
         child: SingleChildScrollView(
           child: Container(
             margin: const EdgeInsets.only(
+              top: 10,
               left: 20,
               right: 20,
             ),
@@ -41,14 +46,18 @@ class StepThreeNewActivityScreen extends StatelessWidget {
                 const SizedBox(height: 20),
                 const CustomTextField(name: '*Name', hintText: "Write a chemical name"),
                 const SizedBox(height: 20),
-                CustomTextField(name: '*Amount', hintText: "0000"),
+                const CustomTextField(
+                  name: '*Amount',
+                  hintText: "0000",
+                  isNumberTextField: true,
+                ),
                 const SizedBox(height: 20),
                 const CustomTextField(name: '*Detail', hintText: "Write additional details here"),
                 const SizedBox(height: 20),
                 GestureDetector(
                   onTap: () {
-                    // Navigator.of(context)
-                        // .push(MaterialPageRoute(builder: (context) => const StepTwoNewActivityScreen()));
+                    Navigator.of(context)
+                        .push(MaterialPageRoute(builder: (context) => const StepThreeRemainingNewActivity()));
                   },
                   child: Container(
                     padding: const EdgeInsets.only(

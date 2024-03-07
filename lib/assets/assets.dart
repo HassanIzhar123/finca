@@ -25,6 +25,9 @@ class Assets {
   static String sowingIcon2 = "$_svgDir/sowing_icon2.svg";
   static String sowingIcon3 = "$_svgDir/sowing_icon3.svg";
   static String calendar = "$_svgDir/calendar.svg";
+  static String createBtn = "$_svgDir/create_btn.svg";
+  static String addIcon = '$_svgDir/add.svg';
+  static String mapIcon = '$_svgDir/map_icon.svg';
   static String rubik = '$_fontDir/rubik/rubik.ttf';
   static String nunito = '$_fontDir/nunito/nunito.ttf';
   static String eliminate = 'Eliminate';

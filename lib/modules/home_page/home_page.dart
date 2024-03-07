@@ -1,5 +1,5 @@
 import 'package:finca/assets/assets.dart';
-import 'package:finca/modules/activity_screen/activity_screen.dart';
+import 'package:finca/modules/activity_screen/pages/activity_screen.dart';
 import 'package:finca/modules/climate_screen/climate_screen.dart';
 import 'package:finca/modules/farms_screen/pages/farms_screen.dart';
 import 'package:finca/modules/reports_screen/reports_page.dart';

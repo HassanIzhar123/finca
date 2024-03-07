@@ -1,13 +1,21 @@
+import 'dart:developer';
+
 import 'package:finca/assets/assets.dart';
-import 'package:finca/modules/farms_screen/pages/step_three_new_farm_screen.dart';
+import 'package:finca/modules/activity_screen/pages/step_three_new_activity_screen.dart';
 import 'package:finca/utils/app_colors.dart';
 import 'package:finca/utils/app_strings.dart';
 import 'package:flutter/material.dart';
+import 'package:group_radio_button/group_radio_button.dart';
 
-import 'step_three_new_activity_screen.dart';
-
-class StepTwoNewActivityScreen extends StatelessWidget {
+class StepTwoNewActivityScreen extends StatefulWidget {
   const StepTwoNewActivityScreen({super.key});
+
+  @override
+  State<StepTwoNewActivityScreen> createState() => _StepTwoNewActivityScreenState();
+}
+
+class _StepTwoNewActivityScreenState extends State<StepTwoNewActivityScreen> {
+  String selectedActivity = "Insecticide";
 
   @override
   Widget build(BuildContext context) {
@@ -49,31 +57,28 @@ class StepTwoNewActivityScreen extends StatelessWidget {
                     fontSize: 14,
                   ),
                 ),
-                Column(
-                  children: [
-                    RadioListTile(
-                      title: const Text("Male"),
-                      value: "male",
-                      groupValue: 0,
-                      onChanged: (value) {},
-                    ),
-                    RadioListTile(
-                      title: const Text("Female"),
-                      value: "female",
-                      groupValue: 0,
-                      onChanged: (value) {},
-                    ),
-                    RadioListTile(
-                      title: const Text("Other"),
-                      value: "other",
-                      groupValue: 1,
-                      onChanged: (value) {},
-                    )
-                  ],
+                RadioGroup<String>.builder(
+                  groupValue: selectedActivity,
+                  activeColor: AppColors.greenColor,
+                  onChanged: (value) {
+                    setState(() {
+                      selectedActivity = value!;
+                    });
+                  },
+                  items: AppStrings.activityTypes,
+                  itemBuilder: (item) => RadioButtonBuilder(
+                    item,
+                  ),
                 ),
                 GestureDetector(
                   onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(builder: (context) => const StepThreeNewActivityScreen()));
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => StepThreeNewActivityScreen(
+                          selectedActivityType: selectedActivity,
+                        ),
+                      ),
+                    );
                   },
                   child: Container(
                     padding: const EdgeInsets.only(
@@ -98,6 +103,9 @@ class StepTwoNewActivityScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+                ),
+                const SizedBox(
+                  height: 30,
                 ),
               ],
             ),

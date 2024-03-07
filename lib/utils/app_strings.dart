@@ -9,8 +9,7 @@ class AppStrings {
   static const String dntHaveAccount = 'You do not have an account? Sign up';
   static const String theContinue = 'The continue with';
   static const didForgetPassword = 'Did you forget your password?';
-  static const agreement =
-      "By registering I agree with the terms and conditions and privacy policy of TediTerritorio";
+  static const agreement = "By registering I agree with the terms and conditions and privacy policy of TediTerritorio";
   static const signup = "SignUp";
   static const haveAccountSignup = 'Do you have an account? Login';
   static const newFarm = "New Farm";
@@ -47,4 +46,22 @@ class AppStrings {
   static const stepTwoNewFarmDescription = 'Description:';
   static const keepText = 'Keep';
   static const enterPassword = 'Enter your password';
+
+  static const List<String> activityTypes = [
+    'Insecticide',
+    'Fungicide',
+    'Bactericide',
+    'Herbicide',
+    'Fertilizer',
+    'Irrigation',
+    'Sowing',
+    'Harvest',
+    'Equipment maintenance',
+    'Trainings',
+    'Pest monitoring',
+    'Weed control',
+    'Soil preparation',
+    'Technical visits',
+    'Other',
+  ];
 }

@@ -1,6 +1,7 @@
 import 'package:finca/assets/assets.dart';
 import 'package:finca/utils/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 
@@ -15,13 +16,18 @@ class CustomTextField extends StatefulWidget {
     this.icon,
     this.iconOnLeft = true,
     this.isCalendarPicker = false,
+    this.isDatePicker = true,
+    this.isNumberTextField = false,
     this.controller,
     this.onChange,
     this.onSubmitted,
+    this.onDateSelected,
   });
 
   final bool iconOnLeft;
   final bool isCalendarPicker;
+  final bool isNumberTextField;
+  final bool isDatePicker;
   final TextEditingController? controller;
   final bool showName;
   final Color borderColor;
@@ -31,6 +37,7 @@ class CustomTextField extends StatefulWidget {
   final String? icon;
   final Function(String)? onChange;
   final Function(String)? onSubmitted;
+  final Function(DateTime)? onDateSelected;
 
   @override
   State<CustomTextField> createState() => _CustomTextFieldState();
@@ -108,7 +115,12 @@ class _CustomTextFieldState extends State<CustomTextField> {
                         controller: widget.controller,
                         maxLines: multiLine ? 5 : null,
                         textInputAction: TextInputAction.send,
-                        keyboardType: multiLine ? TextInputType.multiline : null,
+                        inputFormatters: widget.isNumberTextField ? [FilteringTextInputFormatter.digitsOnly] : [],
+                        keyboardType: widget.isNumberTextField
+                            ? TextInputType.number
+                            : multiLine
+                                ? TextInputType.multiline
+                                : TextInputType.text,
                         decoration: InputDecoration(
                           contentPadding: const EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
                           hintText: hintText,
@@ -121,8 +133,12 @@ class _CustomTextFieldState extends State<CustomTextField> {
                           border: InputBorder.none,
                         ),
                         onChanged: (value) {
-                          if (widget.onChange != null) {
-                            widget.onChange!(value);
+                          if (widget.isCalendarPicker) {
+                            widget.onDateSelected?.call(selectedDate);
+                          } else {
+                            if (widget.onChange != null) {
+                              widget.onChange!(value);
+                            }
                           }
                         },
                         onSubmitted: (value) {
@@ -131,7 +147,13 @@ class _CustomTextFieldState extends State<CustomTextField> {
                       )
                     : GestureDetector(
                         onTap: () {
-                          _selectDate(context);
+                          if (widget.isDatePicker) {
+                            _selectDate(context);
+                          } else {
+                            _selectTime(context, selectedDate, (value) {
+                              widget.onDateSelected?.call(value);
+                            });
+                          }
                         },
                         child: Container(
                           padding: const EdgeInsets.only(
@@ -141,7 +163,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                             right: 10,
                           ),
                           child: Text(
-                            DateFormat('dd-MM-yyyy').format(selectedDate),
+                            DateFormat(widget.isDatePicker ? 'dd-MM-yyyy' : 'hh:mm').format(selectedDate),
                           ),
                         ),
                       ),
@@ -168,11 +190,23 @@ class _CustomTextFieldState extends State<CustomTextField> {
       context: context,
       initialDate: selectedDate,
       firstDate: DateTime(2000),
-      lastDate: DateTime(2025),
+      lastDate: DateTime(2050),
     );
     if (picked != null && picked != selectedDate) {
       setState(() {
         selectedDate = picked;
+      });
+    }
+  }
+
+  Future<void> _selectTime(BuildContext context, DateTime selectedTime, Function(DateTime) onTimeSelected) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(selectedTime),
+    );
+    if (picked != null) {
+      setState(() {
+        selectedDate = DateTime(0, 0, 0, picked.hour, picked.minute);
       });
     }
   }

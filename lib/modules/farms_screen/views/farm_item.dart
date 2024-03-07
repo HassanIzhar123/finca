@@ -4,13 +4,15 @@ import 'package:finca/modules/farms_screen/views/CultivationItem.dart';
 import 'package:finca/modules/farms_screen/views/crop_item.dart';
 import 'package:finca/utils/app_colors.dart';
 import 'package:finca/utils/app_strings.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class FarmItem extends StatelessWidget {
-  const FarmItem({super.key, required this.index, required this.itemSize, required this.farmModel});
+  const FarmItem(
+      {super.key,
+      required this.index,
+      required this.itemSize,
+      required this.farmModel});
 
   final int index, itemSize;
   final FarmModel farmModel;
@@ -34,8 +36,8 @@ class FarmItem extends StatelessWidget {
                   topLeft: Radius.circular(10),
                   bottomRight: Radius.circular(10),
                 ),
-                child: Image.network(
-                  farmModel.image,
+                child: Image.asset(
+                  Assets.mapIcon,
                   height: 100.0,
                   width: 100.0,
                   fit: BoxFit.fill,
@@ -52,7 +54,7 @@ class FarmItem extends StatelessWidget {
                       right: 5,
                     ),
                     child: Text(
-                      farmModel.title,
+                      farmModel.farmName,
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w400,

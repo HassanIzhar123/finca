@@ -13,8 +13,8 @@ class NewCropCubit extends Cubit<NewCropState> {
   NewCropCubit() : super(NewCropInitial());
   final _fireStoreService = NewCropRepository();
 
-  void addNewCrop(
-      String cropName, List<String> varieties, String scientificName, DateTime seedTime, SowingEnum sowing) async {
+  void addNewCrop(String cropName, List<String> varieties,
+      String scientificName, DateTime seedTime, SowingEnum sowing) async {
     try {
       emit(NewCropLoadingState());
       Crop crop = Crop(
@@ -41,7 +41,11 @@ class NewCropCubit extends Cubit<NewCropState> {
       emit(const AllCropFailedState('User not found'));
       return;
     }
-    final cropStream = CollectionRefs.instance.users.doc(userInfo?.uid ?? '').collection('crops').snapshots().map(
+    final cropStream = CollectionRefs.instance.users
+        .doc(userInfo?.uid ?? '')
+        .collection('crops')
+        .snapshots()
+        .map(
           (event) => event.docs
               .map(
                 (e) => Crop.fromJson(
@@ -61,5 +65,29 @@ class NewCropCubit extends Cubit<NewCropState> {
         .doc(crop.cropId)
         .delete();
     emit(const DeleteCropSuccessState(true));
+  }
+
+  getAllCropsOfSpecificFarm() {
+    emit(AllCropLoadingState());
+    final userInfo = UserPreferences().getUserInfo();
+    log("userInfo?.uid: ${userInfo?.uid}");
+    if (userInfo?.uid == null) {
+      emit(const AllCropFailedState('User not found'));
+      return;
+    }
+    final cropStream = CollectionRefs.instance.users
+        .doc(userInfo?.uid ?? '')
+        .collection('crops')
+        .snapshots()
+        .map(
+          (event) => event.docs
+              .map(
+                (e) => Crop.fromJson(
+                  e.data(),
+                ),
+              )
+              .toList(),
+        );
+    emit(AllCropSuccessState(cropStream));
   }
 }

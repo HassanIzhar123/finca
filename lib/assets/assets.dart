@@ -27,7 +27,7 @@ class Assets {
   static String calendar = "$_svgDir/calendar.svg";
   static String createBtn = "$_svgDir/create_btn.svg";
   static String addIcon = '$_svgDir/add.svg';
-  static String mapIcon = '$_svgDir/map_icon.svg';
+  static String mapIcon = '$_svgDir/map_icon.png';
   static String rubik = '$_fontDir/rubik/rubik.ttf';
   static String nunito = '$_fontDir/nunito/nunito.ttf';
   static String eliminate = 'Eliminate';

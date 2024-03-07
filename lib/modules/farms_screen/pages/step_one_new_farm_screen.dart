@@ -3,14 +3,10 @@ import 'dart:async';
 import 'package:finca/assets/assets.dart';
 import 'package:finca/utils/app_colors.dart';
 import 'package:finca/utils/app_strings.dart';
-import 'package:finca/views/custom_text_field.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-import 'new_property_save_screen.dart';
 import 'step_two_new_farm_screen.dart';
 
 class StepOneNewFarmScreen extends StatefulWidget {
@@ -68,7 +64,9 @@ class _StepOneNewFarmScreenState extends State<StepOneNewFarmScreen> {
         child: LayoutBuilder(builder: (context, constraints) {
           return SingleChildScrollView(
             child: ConstrainedBox(
-              constraints: BoxConstraints(minWidth: constraints.maxWidth, minHeight: constraints.maxHeight),
+              constraints: BoxConstraints(
+                  minWidth: constraints.maxWidth,
+                  minHeight: constraints.maxHeight),
               child: IntrinsicHeight(
                 child: Stack(
                   children: [
@@ -173,7 +171,8 @@ class _StepOneNewFarmScreenState extends State<StepOneNewFarmScreen> {
                                 ),
                                 child: TextField(
                                   decoration: InputDecoration(
-                                    contentPadding: const EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
+                                    contentPadding: const EdgeInsets.fromLTRB(
+                                        20.0, 15.0, 20.0, 15.0),
                                     prefixIcon: SizedBox(
                                       height: 10,
                                       width: 10,
@@ -191,11 +190,13 @@ class _StepOneNewFarmScreenState extends State<StepOneNewFarmScreen> {
                                       color: const Color(0xFFD2D2D2),
                                     ),
                                     enabledBorder: OutlineInputBorder(
-                                      borderSide: const BorderSide(color: AppColors.white, width: 0),
+                                      borderSide: const BorderSide(
+                                          color: AppColors.white, width: 0),
                                       borderRadius: BorderRadius.circular(20.0),
                                     ),
                                     focusedBorder: OutlineInputBorder(
-                                      borderSide: const BorderSide(color: AppColors.white, width: 0),
+                                      borderSide: const BorderSide(
+                                          color: AppColors.white, width: 0),
                                       borderRadius: BorderRadius.circular(20.0),
                                     ),
                                   ),
@@ -333,7 +334,8 @@ class _StepOneNewFarmScreenState extends State<StepOneNewFarmScreen> {
           ),
           GestureDetector(
             onTap: () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) => const StepTwoNewFarmScreen()));
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const StepTwoNewFarmScreen()));
             },
             child: Container(
               padding: const EdgeInsets.only(

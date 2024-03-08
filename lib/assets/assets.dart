@@ -20,6 +20,7 @@ class Assets {
   static String search = '$_svgDir/search.svg';
   static String closeForm = "$_svgDir/close.svg";
   static String addCrops = "$_svgDir/add.svg";
+  static String addNewCrop = "$_svgDir/add_new_crop.svg";
   static String closeBtn = "$_svgDir/close_btn.svg";
   static String sowingIcon1 = "$_svgDir/sowing_icon1.svg";
   static String sowingIcon2 = "$_svgDir/sowing_icon2.svg";

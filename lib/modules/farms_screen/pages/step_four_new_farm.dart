@@ -1,6 +1,10 @@
+import 'dart:developer';
+
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:finca/assets/assets.dart';
+import 'package:finca/models/farms_screen/farm_model.dart';
+import 'package:finca/modules/farms_screen/models/crop/Crop.dart';
 import 'package:finca/utils/app_colors.dart';
 import 'package:finca/utils/app_strings.dart';
 import 'package:finca/views/custom_text_field.dart';
@@ -9,6 +13,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class StepFourNewFarmScreen extends StatefulWidget {
+  const StepFourNewFarmScreen({
+    super.key,
+    required this.crop,
+  });
+
+  final Crop crop;
+
   @override
   _StepFourNewFarmScreenState createState() => _StepFourNewFarmScreenState();
 }
@@ -22,11 +33,20 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
   final List<String> certifications = ['Certification 1', 'Certification 2', 'Certification 3'];
 
   String? selectedSoilStudy;
+
   String? selectedCertification;
-  DateTime? selectedSoilDate, selectedCertificationDate;
+  DateTime? selectedSoilDate = DateTime.now(),
+      selectedCertificationDate = DateTime.now();
   List<String> attachedFile = [];
   String? _fileName;
   String? _filePath;
+
+  @override
+  initState() {
+    selectedSoilStudy = soilStudies[0];
+    selectedCertification = certifications[0];
+    super.initState();
+  }
 
   Future<void> _pickPDFFile() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -125,7 +145,7 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
                           'Soil study:',
                           soilStudies,
                           selectedSoilStudy,
-                          (value) {
+                              (value) {
                             setState(() {
                               selectedSoilStudy = value;
                             });
@@ -142,7 +162,7 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
                           'Agricultural Certifications obtained:',
                           certifications,
                           selectedCertification,
-                          (value) {
+                              (value) {
                             setState(() {
                               selectedCertification = value;
                             });
@@ -181,9 +201,9 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
                               // FarmModel farm = FarmModel(
                               //   soilStudy: selectedSoilStudy ?? '',
                               //   soilStudyDate: selectedSoilDate ?? DateTime.now(),
-                              //   certificate: selectedCertification ?? '',
-                              //   selectPdfFile: attachedFile,
-                              //   certificateDate: selectedCertificationDate ?? DateTime.now(),
+                              //   agriculturalCertification: selectedCertification ?? '',
+                              //   soilStudyLink: attachedFile,
+                              //   agriculturalCertificationDate: selectedCertificationDate ?? DateTime.now(),
                               // );
                               // context.read<>().addFarm(farm);
                             }
@@ -229,7 +249,8 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
             ),
             items: items
                 .map(
-                  (String item) => DropdownMenuItem<String>(
+                  (String item) =>
+                  DropdownMenuItem<String>(
                     value: item,
                     child: Text(
                       item,
@@ -241,7 +262,7 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                )
+            )
                 .toList(),
             value: selectedItem,
             onChanged: (String? value) {
@@ -249,7 +270,10 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
             },
             buttonStyleData: ButtonStyleData(
               height: 50,
-              width: MediaQuery.of(context).size.width,
+              width: MediaQuery
+                  .of(context)
+                  .size
+                  .width,
               padding: const EdgeInsets.only(left: 14, right: 14),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
@@ -326,101 +350,101 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
           padding: const EdgeInsets.all(20),
           child: attachedFile.isNotEmpty
               ? Column(
-                  children: [
-                    ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: attachedFile.length,
-                      itemBuilder: (context, index) {
-                        return Column(
-                          children: [
-                            Center(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      attachedFile[index],
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.normal,
-                                        color: AppColors.darkGrey,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        attachedFile.removeAt(index);
-                                      });
-                                    },
-                                    child: SvgPicture.asset(Assets.delete),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const Divider(),
-                          ],
-                        );
-                      },
-                    ),
-                    CupertinoButton(
-                      padding: EdgeInsets.zero,
-                      child: Center(
+            children: [
+              ListView.builder(
+                shrinkWrap: true,
+                itemCount: attachedFile.length,
+                itemBuilder: (context, index) {
+                  return Column(
+                    children: [
+                      Center(
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            SvgPicture.asset(
-                              Assets.createBtn,
-                              height: 20,
-                              width: 20,
+                            Expanded(
+                              child: Text(
+                                attachedFile[index],
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.normal,
+                                  color: AppColors.darkGrey,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                             const SizedBox(width: 10),
-                            const Text(
-                              'Attach Pdf',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.darkGrey,
-                              ),
-                              overflow: TextOverflow.ellipsis,
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  attachedFile.removeAt(index);
+                                });
+                              },
+                              child: SvgPicture.asset(Assets.delete),
                             ),
                           ],
                         ),
                       ),
-                      onPressed: () {
-                        _pickPDFFile();
-                      },
-                    ),
-                  ],
-                )
-              : CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SvgPicture.asset(
-                          Assets.createBtn,
+                      const Divider(),
+                    ],
+                  );
+                },
+              ),
+              CupertinoButton(
+                padding: EdgeInsets.zero,
+                child: Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SvgPicture.asset(
+                        Assets.createBtn,
+                        height: 20,
+                        width: 20,
+                      ),
+                      const SizedBox(width: 10),
+                      const Text(
+                        'Attach Pdf',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.darkGrey,
                         ),
-                        const SizedBox(height: 15),
-                        const Text(
-                          'Attach PDF',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.darkGrey,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
-                  onPressed: () {
-                    _pickPDFFile();
-                  },
                 ),
+                onPressed: () {
+                  _pickPDFFile();
+                },
+              ),
+            ],
+          )
+              : CupertinoButton(
+            padding: EdgeInsets.zero,
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SvgPicture.asset(
+                    Assets.createBtn,
+                  ),
+                  const SizedBox(height: 15),
+                  const Text(
+                    'Attach PDF',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.darkGrey,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            onPressed: () {
+              _pickPDFFile();
+            },
+          ),
         ),
         const SizedBox(height: 20),
       ],

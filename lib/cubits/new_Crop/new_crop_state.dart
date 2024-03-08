@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 import 'package:finca/modules/farms_screen/models/crop/Crop.dart';
 import 'package:flutter/cupertino.dart';
@@ -27,14 +28,15 @@ class NewCropFailedState extends NewCropState {
 
   const NewCropFailedState(this.message);
 }
+
 class AllCropLoadingState extends NewCropState {}
 
 class AllCropSuccessState extends NewCropState {
-  final Stream<List<Crop>> cropStream;
+  final Stream<QuerySnapshot<Map<String, dynamic>>> cropStream;
 
   const AllCropSuccessState(
-      this.cropStream,
-      );
+    this.cropStream,
+  );
 }
 
 class AllCropFailedState extends NewCropState {
@@ -42,7 +44,6 @@ class AllCropFailedState extends NewCropState {
 
   const AllCropFailedState(this.message);
 }
-
 
 class DeleteCropLoadingState extends NewCropState {}
 

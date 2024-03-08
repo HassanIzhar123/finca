@@ -1,5 +1,7 @@
 import 'dart:developer';
+import 'dart:typed_data';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:finca/assets/assets.dart';
 import 'package:finca/cubits/new_Crop/new_crop_cubit.dart';
 import 'package:finca/cubits/new_Crop/new_crop_state.dart';
@@ -8,6 +10,7 @@ import 'package:finca/modules/farms_screen/models/crop/Crop.dart';
 import 'package:finca/modules/farms_screen/models/tag.dart';
 import 'package:finca/modules/farms_screen/pages/new_crop_screen.dart';
 import 'package:finca/modules/farms_screen/pages/step_four_new_farm.dart';
+import 'package:finca/modules/farms_screen/views/crop_item.dart';
 import 'package:finca/utils/app_colors.dart';
 import 'package:finca/utils/app_strings.dart';
 import 'package:finca/utils/collection_refs.dart';
@@ -15,38 +18,39 @@ import 'package:finca/utils/user_preferences.dart';
 import 'package:finca/views/step_progress_view.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:intl/intl.dart';
 
 class StepThreeNewFarmScreen extends StatefulWidget {
-  const StepThreeNewFarmScreen(
-      {super.key, required this.name, required this.size, required this.selectedSoilType, this.description});
+  const StepThreeNewFarmScreen({
+    super.key,
+    required this.name,
+    required this.size,
+    required this.selectedSoilType,
+    this.description,
+    required this.selectedPolygons,
+    required this.polygonImage,
+  });
 
+  final Set<Polygon> selectedPolygons;
   final String name;
   final String size;
   final Tag selectedSoilType;
   final String? description;
+  final Uint8List polygonImage;
 
   @override
   State<StepThreeNewFarmScreen> createState() => _StepThreeNewFarmScreenState();
 }
 
 class _StepThreeNewFarmScreenState extends State<StepThreeNewFarmScreen> {
-  List<Crop> crops = [];
-
-  final _stepsText = ["Sowing", "In Progress", "Harvest"];
-
-  final _stepCircleRadius = 5.0;
-
-  final _stepProgressViewHeight = 60.0;
-
-  final Color _activeColor = AppColors.greenColor;
-
-  final Color _inactiveColor = Colors.grey;
-
-  final TextStyle _stepStyle = const TextStyle(fontSize: 12.0, fontWeight: FontWeight.bold);
   bool isCropDeleting = false;
-  Stream<List<Crop>> cropsStream = const Stream<List<Crop>>.empty();
+  Stream<QuerySnapshot<Map<String, dynamic>>> cropsStream = const Stream.empty();
+  int selectedIndex = -1;
+  List<Crop> crops = [];
 
   @override
   Widget build(BuildContext context) {
@@ -120,7 +124,14 @@ class _StepThreeNewFarmScreenState extends State<StepThreeNewFarmScreen> {
                                         const SizedBox(
                                           height: 8,
                                         ),
-                                        SvgPicture.asset(Assets.backIcon),
+                                        GestureDetector(
+                                          onTap: () {
+                                            Navigator.pop(context);
+                                          },
+                                          child: SvgPicture.asset(
+                                            Assets.backIcon,
+                                          ),
+                                        ),
                                       ],
                                     ),
                                     const SizedBox(
@@ -175,8 +186,15 @@ class _StepThreeNewFarmScreenState extends State<StepThreeNewFarmScreen> {
                               ),
                               CupertinoButton(
                                 onPressed: () {
-                                  Navigator.of(context)
-                                      .push(MaterialPageRoute(builder: (context) => const NewCropScreen()));
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => NewCropScreen(
+                                        farmName: widget.name,
+                                        polygonImage: widget.polygonImage,
+                                        selectedPolygon: widget.selectedPolygons,
+                                      ),
+                                    ),
+                                  );
                                 },
                                 padding: EdgeInsets.zero,
                                 child: Container(
@@ -195,7 +213,7 @@ class _StepThreeNewFarmScreenState extends State<StepThreeNewFarmScreen> {
                                   child: Column(
                                     children: [
                                       SvgPicture.asset(
-                                        Assets.addCrops,
+                                        Assets.addNewCrop,
                                       ),
                                       const SizedBox(
                                         height: 10,
@@ -222,10 +240,18 @@ class _StepThreeNewFarmScreenState extends State<StepThreeNewFarmScreen> {
                               bottom: 20,
                             ),
                             child: GestureDetector(
-                              onTap: () {
-                                Navigator.of(context)
-                                    .push(MaterialPageRoute(builder: (context) => StepFourNewFarmScreen()));
-                              },
+                              onTap: selectedIndex == -1
+                                  ? null
+                                  : () {
+                                      log("selectedIndex: " + selectedIndex.toString());
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (context) => StepFourNewFarmScreen(
+                                            crop: crops[selectedIndex],
+                                          ),
+                                        ),
+                                      );
+                                    },
                               child: Container(
                                 margin: const EdgeInsets.only(
                                   left: 25,
@@ -236,7 +262,7 @@ class _StepThreeNewFarmScreenState extends State<StepThreeNewFarmScreen> {
                                   bottom: 10,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.greenColor,
+                                  color: selectedIndex != -1 ? AppColors.greenColor : AppColors.greenColor,
                                   borderRadius: BorderRadius.circular(
                                     10,
                                   ),
@@ -268,12 +294,8 @@ class _StepThreeNewFarmScreenState extends State<StepThreeNewFarmScreen> {
     );
   }
 
-  Widget cropsList(Stream<List<Crop>> cropsStream) {
+  Widget cropsList(Stream<QuerySnapshot<Map<String, dynamic>>> cropsStream) {
     final userInfo = UserPreferences().getUserInfo();
-    // if (userInfo?.uid == null) {
-    //   return const SizedBox();
-    // }
-    log("uidValueCheck: ${userInfo?.uid}");
     return StreamBuilder(
         stream: cropsStream,
         builder: (context, snapshot) {
@@ -283,208 +305,35 @@ class _StepThreeNewFarmScreenState extends State<StepThreeNewFarmScreen> {
           log('snapshot.hasData: ${snapshot.hasData}');
           if (snapshot.hasData) {
             log("crops: ${snapshot.data.toString()}");
-            crops = snapshot.data??[];
+            crops.clear();
+            crops = snapshot.data?.docs
+                    .map(
+                      (e) => Crop.fromJson(
+                        e.data(),
+                      ),
+                    )
+                    .toList() ??
+                [];
             return ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: crops.length,
                 itemBuilder: (context, index) {
-                  return Container(
-                    margin: const EdgeInsets.only(
-                      top: 20,
-                      left: 20,
-                      right: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(
-                        10,
-                      ),
-                      color: AppColors.lightGrey,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ClipRRect(
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(10),
-                                bottomRight: Radius.circular(10),
-                              ),
-                              child: Image.network(
-                                'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSVkDF8i8wPSCO875Sj0ZDB8GFcVntXNlnb0Q&usqp=CAU',
-                                height: 100.0,
-                                width: 100.0,
-                                fit: BoxFit.fill,
-                              ),
-                            ),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    margin: const EdgeInsets.only(
-                                      left: 10,
-                                      right: 10,
-                                    ),
-                                    padding: const EdgeInsets.only(
-                                      top: 10,
-                                      // bottom: 10,
-                                    ),
-                                    child: Text(
-                                      crops[index].cropName,
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w500,
-                                        color: AppColors.darkGrey,
-                                        fontFamily: Assets.rubik,
-                                      ),
-                                    ),
-                                  ),
-                                  Container(
-                                    margin: const EdgeInsets.only(
-                                      left: 10,
-                                      right: 10,
-                                    ),
-                                    child: Text(
-                                      '#Property name',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w400,
-                                        color: AppColors.darkGrey,
-                                        fontFamily: Assets.rubik,
-                                      ),
-                                    ),
-                                  ),
-                                  // Flexible(
-                                  //   child: Wrap(
-                                  //     children: List.generate(
-                                  //       Random().nextInt(5) + 1,
-                                  //       (_) => SizedBox(width: 50, height: 50),
-                                  //     ),
-                                  //   ),
-                                  // ),
-                                  Container(
-                                    margin: const EdgeInsets.only(
-                                      left: 10,
-                                      top: 10,
-                                    ),
-                                    height: 25,
-                                    child: ListView(
-                                      shrinkWrap: true,
-                                      scrollDirection: Axis.horizontal,
-                                      physics: const NeverScrollableScrollPhysics(),
-                                      children: crops[index]
-                                          .varieties
-                                          .map((variety) => VarietyView(varietyName: variety))
-                                          .toList(),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        StepProgressView(
-                          _stepsText,
-                          (SowingEnum.values.indexOf(crops[index].sowing)) + 1,
-                          _stepProgressViewHeight,
-                          MediaQuery.of(context).size.width,
-                          _stepCircleRadius,
-                          _activeColor,
-                          _inactiveColor,
-                          _stepStyle,
-                          decoration: const BoxDecoration(color: AppColors.lightGrey),
-                          padding: const EdgeInsets.only(
-                            // top: 48.0,
-                            left: 24.0,
-                            right: 24.0,
-                          ),
-                        ),
-                        Container(
-                          margin: const EdgeInsets.only(
-                            left: 20,
-                            right: 20,
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.max,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        SvgPicture.asset(Assets.calendar),
-                                        const SizedBox(
-                                          width: 5,
-                                        ),
-                                        Text(
-                                          crops[index].seedTime.toString(),
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w400,
-                                            color: AppColors.darkGrey,
-                                            fontFamily: Assets.rubik,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(
-                                      height: 10,
-                                    ),
-                                    Container(
-                                      decoration: const BoxDecoration(color: AppColors.darkGrey),
-                                      height: 0.5,
-                                    ),
-                                    const SizedBox(
-                                      height: 10,
-                                    ),
-                                    GestureDetector(
-                                      onTap: isCropDeleting
-                                          ? null
-                                          : () {
-                                              context.read<NewCropCubit>().deleteSpecificCrop(crops[index]);
-                                            },
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.max,
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          SvgPicture.asset(
-                                            Assets.delete,
-                                            color: AppColors.red,
-                                          ),
-                                          const SizedBox(
-                                            width: 5,
-                                          ),
-                                          Text(
-                                            Assets.eliminate,
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w400,
-                                              color: AppColors.red,
-                                              fontFamily: Assets.rubik,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                      ],
-                    ),
+                  return CropItem(
+                    crop: crops[index],
+                    index: index,
+                    isCropDeleting: isCropDeleting,
+                    isSelected: selectedIndex == index,
+                    onSelectCrop: (int index) {
+                      setState(() {
+                        selectedIndex = -1;
+                        selectedIndex = index;
+                        log('index: $index');
+                      });
+                    },
+                    onDeleteCrop: (crop) {
+                      context.read<NewCropCubit>().deleteSpecificCrop(crop);
+                    },
                   );
                 });
           }

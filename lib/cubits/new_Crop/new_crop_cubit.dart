@@ -1,34 +1,57 @@
 import 'dart:developer';
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:finca/cubits/new_Crop/new_crop_state.dart';
 import 'package:finca/enums/sowing_enum.dart';
 import 'package:finca/modules/farms_screen/models/crop/Crop.dart';
 import 'package:finca/repository/new_crop_repository/new_crop_repository.dart';
+import 'package:finca/services/storage_service.dart';
 import 'package:finca/utils/app_exception.dart';
 import 'package:finca/utils/collection_refs.dart';
 import 'package:finca/utils/user_preferences.dart';
+import 'package:finca/utils/utils.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class NewCropCubit extends Cubit<NewCropState> {
   NewCropCubit() : super(NewCropInitial());
   final _fireStoreService = NewCropRepository();
 
-  void addNewCrop(String cropName, List<String> varieties,
-      String scientificName, DateTime seedTime, SowingEnum sowing) async {
+  Future<String> _uploadImage(Uint8List? imageData, String pictureId) async {
+    if (imageData != null) {
+      final firebaseImagePath = 'Farms/$pictureId.jpg'; // Assuming the image format is JPEG
+      return StorageService.uploadFile(firebaseImagePath, imageData).then((value) {
+        return value;
+      });
+    }
+    return '';
+  }
+
+  void addNewCrop(String farmName, String cropName, List<String> varieties, String scientificName, DateTime seedTime,
+      SowingEnum sowing, Uint8List polygonImage) async {
     try {
       emit(NewCropLoadingState());
+      final userInfo = UserPreferences().getUserInfo();
+      final ref = CollectionRefs.instance.users.doc(userInfo?.uid ?? '').collection('crops');
+      String docId = ref.doc().id;
+      String farmImage = await _uploadImage(
+        polygonImage,
+        docId,
+      );
       Crop crop = Crop(
-        '',
+        docId,
+        farmName,
         cropName,
+        farmImage,
         varieties,
         scientificName,
         DateTime.now(),
         sowing,
       );
-      final userInfo = UserPreferences().getUserInfo();
-      _fireStoreService.addNewCrop(crop, userInfo?.uid ?? '');
+      _fireStoreService.addNewCrop(docId, crop, userInfo?.uid ?? '');
       emit(const NewCropSuccessState(true));
     } on AppException catch (e) {
+      log("EceptioneL: ${e.toString()}");
       emit(NewCropFailedState(e.toString()));
     }
   }
@@ -41,19 +64,7 @@ class NewCropCubit extends Cubit<NewCropState> {
       emit(const AllCropFailedState('User not found'));
       return;
     }
-    final cropStream = CollectionRefs.instance.users
-        .doc(userInfo?.uid ?? '')
-        .collection('crops')
-        .snapshots()
-        .map(
-          (event) => event.docs
-              .map(
-                (e) => Crop.fromJson(
-                  e.data(),
-                ),
-              )
-              .toList(),
-        );
+    final cropStream = CollectionRefs.instance.users.doc(userInfo?.uid ?? '').collection('crops').snapshots();
     emit(AllCropSuccessState(cropStream));
   }
 
@@ -67,27 +78,23 @@ class NewCropCubit extends Cubit<NewCropState> {
     emit(const DeleteCropSuccessState(true));
   }
 
-  getAllCropsOfSpecificFarm() {
-    emit(AllCropLoadingState());
-    final userInfo = UserPreferences().getUserInfo();
-    log("userInfo?.uid: ${userInfo?.uid}");
-    if (userInfo?.uid == null) {
-      emit(const AllCropFailedState('User not found'));
-      return;
-    }
-    final cropStream = CollectionRefs.instance.users
-        .doc(userInfo?.uid ?? '')
-        .collection('crops')
-        .snapshots()
-        .map(
-          (event) => event.docs
-              .map(
-                (e) => Crop.fromJson(
-                  e.data(),
-                ),
-              )
-              .toList(),
-        );
-    emit(AllCropSuccessState(cropStream));
-  }
+// getAllCropsOfSpecificFarm() {
+//   emit(AllCropLoadingState());
+//   final userInfo = UserPreferences().getUserInfo();
+//   log("userInfo?.uid: ${userInfo?.uid}");
+//   if (userInfo?.uid == null) {
+//     emit(const AllCropFailedState('User not found'));
+//     return;
+//   }
+//   final cropStream = CollectionRefs.instance.users.doc(userInfo?.uid ?? '').collection('crops').snapshots().map(
+//         (event) => event.docs
+//             .map(
+//               (e) => Crop.fromJson(
+//                 e.data(),
+//               ),
+//             )
+//             .toList(),
+//       );
+//   emit(AllCropSuccessState(cropStream));
+// }
 }

@@ -1,4 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class FarmModel {
+  final String farmId;
   final String farmName;
   final double size;
   final String description;
@@ -11,6 +14,7 @@ class FarmModel {
   final DateTime agriculturalCertificationDate;
 
   FarmModel({
+    required this.farmId,
     required this.farmName,
     required this.size,
     required this.description,
@@ -24,6 +28,7 @@ class FarmModel {
   });
 
   factory FarmModel.empty() => FarmModel(
+        farmId: '',
         farmName: '',
         size: 0,
         description: '',
@@ -38,17 +43,34 @@ class FarmModel {
 
   factory FarmModel.fromJson(Map<String, dynamic> json) {
     return FarmModel(
+      farmId: json['farmId'],
       farmName: json['farmName'],
       size: json['size'],
       description: json['description'],
-      location: json['location'],
+      location: json['location'] ?? '',
       crops: List<String>.from(json['crops']),
       soilStudy: json['soilStudy'],
-      soilStudyDate: DateTime.parse(json['soilStudyDate']),
-      soilStudyLink: List<String>.from(json['selectPdfFile']),
+      soilStudyDate: (json['soilStudyDate'] as Timestamp).toDate(),
+      soilStudyLink: List<String>.from(json['soilStudyLink']),
       agriculturalCertification: json['agriculturalCertification'],
-      agriculturalCertificationDate:
-          DateTime.parse(json['agriculturalCertificationDate']),
+      agriculturalCertificationDate: (json['agriculturalCertificationDate'] as Timestamp).toDate(),
     );
+  }
+
+  //toJson
+  Map<String, dynamic> toJson() {
+    return {
+      'farmId': farmId,
+      'farmName': farmName,
+      'size': size,
+      'description': description,
+      'location': location,
+      'crops': crops,
+      'soilStudy': soilStudy,
+      'soilStudyDate': soilStudyDate.toIso8601String(),
+      'soilStudyLink': soilStudyLink,
+      'agriculturalCertification': agriculturalCertification,
+      'agriculturalCertificationDate': agriculturalCertificationDate.toIso8601String(),
+    };
   }
 }

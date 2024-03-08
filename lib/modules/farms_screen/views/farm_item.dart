@@ -4,18 +4,22 @@ import 'package:finca/modules/farms_screen/views/CultivationItem.dart';
 import 'package:finca/modules/farms_screen/views/crop_item.dart';
 import 'package:finca/utils/app_colors.dart';
 import 'package:finca/utils/app_strings.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class FarmItem extends StatelessWidget {
-  const FarmItem(
-      {super.key,
-      required this.index,
-      required this.itemSize,
-      required this.farmModel});
+  const FarmItem({
+    super.key,
+    required this.index,
+    required this.itemSize,
+    required this.farmModel,
+    required this.onDeleteTapped,
+  });
 
   final int index, itemSize;
   final FarmModel farmModel;
+  final Function(FarmModel farmModel) onDeleteTapped;
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +73,7 @@ class FarmItem extends StatelessWidget {
                       right: 5,
                     ),
                     child: Text(
-                      farmModel.description,
+                      farmModel.description.isEmpty ? '-' : farmModel.description,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w500,
@@ -85,7 +89,7 @@ class FarmItem extends StatelessWidget {
                         color: AppColors.darkGrey,
                       ),
                       Text(
-                        farmModel.location,
+                        farmModel.location.isNotEmpty ? farmModel.location : '-',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w400,
@@ -129,7 +133,7 @@ class FarmItem extends StatelessWidget {
                     shrinkWrap: true,
                     scrollDirection: Axis.horizontal,
                     itemBuilder: (context, index) {
-                      return CropItem(cropName: "Variety $index");
+                      // return CropItem(cropName: "Variety $index");
                     },
                   ),
                 ),
@@ -193,24 +197,29 @@ class FarmItem extends StatelessWidget {
                         ),
                       ],
                     ),
-                    Row(
-                      children: [
-                        SvgPicture.asset(
-                          Assets.delete,
-                        ),
-                        const SizedBox(
-                          width: 5,
-                        ),
-                        Text(
-                          AppStrings.delete,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: AppColors.red,
-                            fontFamily: Assets.rubik,
+                    GestureDetector(
+                      onTap: () {
+                        onDeleteTapped(farmModel);
+                      },
+                      child: Row(
+                        children: [
+                          SvgPicture.asset(
+                            Assets.delete,
                           ),
-                        ),
-                      ],
+                          const SizedBox(
+                            width: 5,
+                          ),
+                          Text(
+                            AppStrings.delete,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: AppColors.red,
+                              fontFamily: Assets.rubik,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

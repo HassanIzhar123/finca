@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:finca/assets/assets.dart';
 import 'package:finca/modules/farms_screen/models/tag.dart';
 import 'package:finca/modules/farms_screen/pages/step_three_new_farm_screen.dart';
@@ -5,14 +7,15 @@ import 'package:finca/views/tags_view.dart';
 import 'package:finca/utils/app_colors.dart';
 import 'package:finca/utils/app_strings.dart';
 import 'package:finca/views/custom_text_field.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_maps_flutter_platform_interface/src/types/polygon.dart';
 
 class StepTwoNewFarmScreen extends StatefulWidget {
-  const StepTwoNewFarmScreen({super.key});
+  final Set<Polygon> selectedPolygons;
+  final Uint8List polygonImage;
+
+  const StepTwoNewFarmScreen({super.key, required this.selectedPolygons, required this.polygonImage});
 
   @override
   State<StepTwoNewFarmScreen> createState() => _StepTwoNewFarmScreenState();
@@ -130,6 +133,7 @@ class _StepTwoNewFarmScreenState extends State<StepTwoNewFarmScreen> {
                     child: CustomTextField(
                       name: AppStrings.size,
                       hintText: "0000",
+                      isNumberTextField: true,
                       onChange: (text) {
                         setState(() {
                           size = text;
@@ -201,21 +205,30 @@ class _StepTwoNewFarmScreenState extends State<StepTwoNewFarmScreen> {
                 ),
                 GestureDetector(
                   onTap: () {
-                    if(name.isEmpty){
+                    if (name.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                         content: Text('Please enter farm name'),
                       ));
                       return;
                     }
-                    if(size.isEmpty){
+                    if (size.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                         content: Text('Please enter farm size'),
                       ));
                       return;
                     }
-                    Navigator.of(context).push(MaterialPageRoute(
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
                         builder: (context) => StepThreeNewFarmScreen(
-                            name: name, size: size, selectedSoilType: selectedSoilType, description: description)));
+                          name: name,
+                          size: size,
+                          selectedSoilType: selectedSoilType,
+                          description: description,
+                          selectedPolygons: widget.selectedPolygons,
+                          polygonImage: widget.polygonImage,
+                        ),
+                      ),
+                    );
                   },
                   child: Container(
                     margin: const EdgeInsets.only(

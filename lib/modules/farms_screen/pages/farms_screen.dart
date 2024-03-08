@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:finca/assets/assets.dart';
 import 'package:finca/models/farms_screen/farm_model.dart';
 import 'package:finca/modules/farms_screen/pages/map_sample.dart';
@@ -5,6 +6,7 @@ import 'package:finca/modules/farms_screen/pages/step_one_new_farm_screen.dart';
 import 'package:finca/modules/farms_screen/views/farm_item.dart';
 import 'package:finca/utils/app_colors.dart';
 import 'package:finca/utils/app_strings.dart';
+import 'package:finca/utils/user_preferences.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -87,23 +89,59 @@ class _FarmsScreenState extends State<FarmsScreen> {
             const SizedBox(
               height: 10,
             ),
-            // ListView.builder(
-            //   shrinkWrap: true,
-            //   itemCount: 5,
-            //   physics: const BouncingScrollPhysics(),
-            //   itemBuilder: (context, index) {
-            //     return FarmItem(
-            //       index: index,
-            //       itemSize: 5,
-            //       farmModel: FarmModel(
-            //           title: "Hey",
-            //           description: "hi",
-            //           location: "pak",
-            //           image:
-            //               "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSVkDF8i8wPSCO875Sj0ZDB8GFcVntXNlnb0Q&usqp=CAU"),
-            //     );
-            //   },
-            // ),
+            StreamBuilder(
+              stream: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(UserPreferences().getUserInfo()?.uid ?? '')
+                  .collection('farms')
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+                if (snapshot.hasError) {
+                  return const Center(
+                    child: Text('Error'),
+                  );
+                }
+                if (snapshot.data == null) {
+                  return const Center(
+                    child: Text('No data found'),
+                  );
+                }
+                if (snapshot.data!.docs.isEmpty) {
+                  return const Center(
+                    child: Text('No data found'),
+                  );
+                }
+                final farms = snapshot.data!.docs.map((e) {
+                  final data = FarmModel.fromJson(e.data());
+                  return data;
+                }).toList();
+                return ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: farms.length,
+                  physics: const BouncingScrollPhysics(),
+                  itemBuilder: (context, index) {
+                    return FarmItem(
+                      index: index,
+                      itemSize: farms.length,
+                      farmModel: farms[index],
+                      onDeleteTapped: (FarmModel farmModel) {
+                        FirebaseFirestore.instance
+                            .collection('users')
+                            .doc(UserPreferences().getUserInfo()?.uid ?? '')
+                            .collection('farms')
+                            .doc(farmModel.farmId)
+                            .delete();
+                      },
+                    );
+                  },
+                );
+              },
+            ),
           ],
         ),
       ),

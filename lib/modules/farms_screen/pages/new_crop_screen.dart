@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:typed_data';
 
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:finca/assets/assets.dart';
@@ -13,9 +14,19 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_maps_flutter_platform_interface/src/types/polygon.dart';
 
 class NewCropScreen extends StatefulWidget {
-  const NewCropScreen({super.key});
+  const NewCropScreen({
+    super.key,
+    required this.farmName,
+    required this.polygonImage,
+    required this.selectedPolygon,
+  });
+
+  final String farmName;
+  final Uint8List polygonImage;
+  final Set<Polygon> selectedPolygon;
 
   @override
   State<NewCropScreen> createState() => _NewCropScreenState();
@@ -35,8 +46,7 @@ class _NewCropScreenState extends State<NewCropScreen> {
   String? selectedValue;
   final List<Sowing> sowing = [
     Sowing(AppStrings.sowingText, Assets.sowingIcon1, true, SowingEnum.sowing),
-    Sowing(AppStrings.maintenance, Assets.sowingIcon1, false,
-        SowingEnum.maintenance),
+    Sowing(AppStrings.maintenance, Assets.sowingIcon1, false, SowingEnum.maintenance),
     Sowing(AppStrings.harvest, Assets.sowingIcon1, false, SowingEnum.harvest),
   ];
   List<String> tags = [];
@@ -50,8 +60,7 @@ class _NewCropScreenState extends State<NewCropScreen> {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (BuildContext context) => NewCropCubit(),
-      child:
-          BlocConsumer<NewCropCubit, NewCropState>(listener: (context, state) {
+      child: BlocConsumer<NewCropCubit, NewCropState>(listener: (context, state) {
         log("state: $state");
         if (state is NewCropLoadingState) {
           isLoading = true;
@@ -94,7 +103,9 @@ class _NewCropScreenState extends State<NewCropScreen> {
                             ),
                           ),
                           IconButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
                             icon: const Icon(
                               Icons.close,
                               color: Color(0xFF24B763),
@@ -242,8 +253,7 @@ class _NewCropScreenState extends State<NewCropScreen> {
                             padding: const EdgeInsets.only(left: 14, right: 14),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                  color: const Color(0xFFD9D9D9), width: 2),
+                              border: Border.all(color: const Color(0xFFD9D9D9), width: 2),
                               color: Colors.white,
                             ),
                             elevation: 0,
@@ -265,8 +275,7 @@ class _NewCropScreenState extends State<NewCropScreen> {
                             scrollbarTheme: ScrollbarThemeData(
                               radius: const Radius.circular(40),
                               thickness: MaterialStateProperty.all<double>(6),
-                              thumbVisibility:
-                                  MaterialStateProperty.all<bool>(true),
+                              thumbVisibility: MaterialStateProperty.all<bool>(true),
                             ),
                           ),
                           menuItemStyleData: const MenuItemStyleData(
@@ -335,10 +344,8 @@ class _NewCropScreenState extends State<NewCropScreen> {
                                     10,
                                   ),
                                   border: sowing[index].isSelected
-                                      ? Border.all(
-                                          color: AppColors.greenColor, width: 2)
-                                      : Border.all(
-                                          color: Colors.transparent, width: 2),
+                                      ? Border.all(color: AppColors.greenColor, width: 2)
+                                      : Border.all(color: Colors.transparent, width: 2),
                                 ),
                                 child: Column(
                                   children: [
@@ -372,71 +379,71 @@ class _NewCropScreenState extends State<NewCropScreen> {
                           bottom: 20,
                         ),
                         child: GestureDetector(
-                          onTap: () async {
-                            if (cropName.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Please enter crop name',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.white,
-                                      fontFamily: Assets.rubik,
-                                    ),
-                                  ),
-                                  backgroundColor: AppColors.red,
-                                ),
-                              );
-                              return;
-                            }
-                            if (tags.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Please enter varieties',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.white,
-                                      fontFamily: Assets.rubik,
-                                    ),
-                                  ),
-                                  backgroundColor: AppColors.red,
-                                ),
-                              );
-                              return;
-                            }
-                            if (selectedValue == null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Please select scientific name',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.white,
-                                      fontFamily: Assets.rubik,
-                                    ),
-                                  ),
-                                  backgroundColor: AppColors.red,
-                                ),
-                              );
-                              return;
-                            }
-                            context.read<NewCropCubit>().addNewCrop(
-                                  cropName,
-                                  tags,
-                                  selectedValue!,
-                                  DateTime.now(),
-                                  selectedSowing,
-                                );
-                          },
+                          onTap: state is NewCropLoadingState
+                              ? null
+                              : () async {
+                                  if (cropName.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Please enter crop name',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.white,
+                                            fontFamily: Assets.rubik,
+                                          ),
+                                        ),
+                                        backgroundColor: AppColors.red,
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  if (tags.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Please enter varieties',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.white,
+                                            fontFamily: Assets.rubik,
+                                          ),
+                                        ),
+                                        backgroundColor: AppColors.red,
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  if (selectedValue == null) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Please select scientific name',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.white,
+                                            fontFamily: Assets.rubik,
+                                          ),
+                                        ),
+                                        backgroundColor: AppColors.red,
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  context.read<NewCropCubit>().addNewCrop(
+                                        widget.farmName,
+                                        cropName,
+                                        tags,
+                                        selectedValue!,
+                                        DateTime.now(),
+                                        selectedSowing,
+                                        widget.polygonImage,
+                                      );
+                                },
                           child: Container(
-                            // margin: const EdgeInsets.only(
-                            //   left: 25,
-                            //   right: 10,
-                            // ),
                             padding: const EdgeInsets.only(
                               top: 10,
                               bottom: 10,
@@ -448,15 +455,19 @@ class _NewCropScreenState extends State<NewCropScreen> {
                               ),
                             ),
                             child: Center(
-                              child: Text(
-                                AppStrings.keepText,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.white,
-                                  fontFamily: Assets.rubik,
-                                ),
-                              ),
+                              child: state is NewCropLoadingState
+                                  ? const Center(
+                                      child: CupertinoActivityIndicator(),
+                                    )
+                                  : Text(
+                                      AppStrings.keepText,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.white,
+                                        fontFamily: Assets.rubik,
+                                      ),
+                                    ),
                             ),
                           ),
                         ),

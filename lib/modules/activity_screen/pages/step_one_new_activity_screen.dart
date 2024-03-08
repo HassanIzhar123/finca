@@ -67,7 +67,7 @@ class _StepOneNewActivityState extends State<StepOneNewActivity> {
                   });
                 }),
                 ListTile(
-                  title: const Text('Option 1'),
+                  title: const Text('All Day'),
                   leading: Radio<int>(
                     value: 1,
                     groupValue: 1,

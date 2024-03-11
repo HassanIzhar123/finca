@@ -46,7 +46,8 @@ class _NewCropScreenState extends State<NewCropScreen> {
   String? selectedValue;
   final List<Sowing> sowing = [
     Sowing(AppStrings.sowingText, Assets.sowingIcon1, true, SowingEnum.sowing),
-    Sowing(AppStrings.maintenance, Assets.sowingIcon1, false, SowingEnum.maintenance),
+    Sowing(AppStrings.maintenance, Assets.sowingIcon1, false,
+        SowingEnum.maintenance),
     Sowing(AppStrings.harvest, Assets.sowingIcon1, false, SowingEnum.harvest),
   ];
   List<String> tags = [];
@@ -60,7 +61,8 @@ class _NewCropScreenState extends State<NewCropScreen> {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (BuildContext context) => NewCropCubit(),
-      child: BlocConsumer<NewCropCubit, NewCropState>(listener: (context, state) {
+      child:
+          BlocConsumer<NewCropCubit, NewCropState>(listener: (context, state) {
         log("state: $state");
         if (state is NewCropLoadingState) {
           isLoading = true;
@@ -69,7 +71,7 @@ class _NewCropScreenState extends State<NewCropScreen> {
           Navigator.pop(context);
         } else if (state is NewCropFailedState) {
           isLoading = false;
-          Navigator.pop(context);
+          // Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
@@ -253,7 +255,8 @@ class _NewCropScreenState extends State<NewCropScreen> {
                             padding: const EdgeInsets.only(left: 14, right: 14),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: const Color(0xFFD9D9D9), width: 2),
+                              border: Border.all(
+                                  color: const Color(0xFFD9D9D9), width: 2),
                               color: Colors.white,
                             ),
                             elevation: 0,
@@ -275,7 +278,8 @@ class _NewCropScreenState extends State<NewCropScreen> {
                             scrollbarTheme: ScrollbarThemeData(
                               radius: const Radius.circular(40),
                               thickness: MaterialStateProperty.all<double>(6),
-                              thumbVisibility: MaterialStateProperty.all<bool>(true),
+                              thumbVisibility:
+                                  MaterialStateProperty.all<bool>(true),
                             ),
                           ),
                           menuItemStyleData: const MenuItemStyleData(
@@ -344,8 +348,10 @@ class _NewCropScreenState extends State<NewCropScreen> {
                                     10,
                                   ),
                                   border: sowing[index].isSelected
-                                      ? Border.all(color: AppColors.greenColor, width: 2)
-                                      : Border.all(color: Colors.transparent, width: 2),
+                                      ? Border.all(
+                                          color: AppColors.greenColor, width: 2)
+                                      : Border.all(
+                                          color: Colors.transparent, width: 2),
                                 ),
                                 child: Column(
                                   children: [

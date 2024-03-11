@@ -1,5 +1,4 @@
 import 'dart:developer';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:finca/cubits/new_Crop/new_crop_state.dart';
@@ -10,30 +9,40 @@ import 'package:finca/services/storage_service.dart';
 import 'package:finca/utils/app_exception.dart';
 import 'package:finca/utils/collection_refs.dart';
 import 'package:finca/utils/user_preferences.dart';
-import 'package:finca/utils/utils.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class NewCropCubit extends Cubit<NewCropState> {
   NewCropCubit() : super(NewCropInitial());
   final _fireStoreService = NewCropRepository();
 
-  Future<String> _uploadImage(Uint8List? imageData, String collectionName, String pictureId) async {
+  Future<String> _uploadImage(
+      Uint8List? imageData, String collectionName, String pictureId) async {
     if (imageData != null) {
-      final firebaseImagePath = '$collectionName/$pictureId.jpg'; // Assuming the image format is JPEG
-      return StorageService.uploadFileWithUIntList(firebaseImagePath, imageData).then((value) {
+      final firebaseImagePath = '$collectionName/$pictureId.jpg';
+      return StorageService.uploadFileWithUIntList(firebaseImagePath, imageData)
+          .then((value) {
         return value;
       });
     }
     return '';
   }
 
-  void addNewCrop(String farmName, String cropName, List<String> varieties, String scientificName, DateTime seedTime,
-      SowingEnum sowing, Uint8List polygonImage) async {
+  void addNewCrop(
+      String farmName,
+      String cropName,
+      List<String> varieties,
+      String scientificName,
+      DateTime seedTime,
+      SowingEnum sowing,
+      Uint8List polygonImage) async {
     try {
       emit(NewCropLoadingState());
       final userInfo = UserPreferences().getUserInfo();
-      final ref = CollectionRefs.instance.users.doc(userInfo?.uid ?? '').collection('crops');
+      final ref = CollectionRefs.instance.users
+          .doc(userInfo?.uid ?? '')
+          .collection('crops');
       String docId = ref.doc().id;
+      log('docId: $docId');
       String farmImage = await _uploadImage(
         polygonImage,
         'Crops',
@@ -65,7 +74,10 @@ class NewCropCubit extends Cubit<NewCropState> {
       emit(const AllCropFailedState('User not found'));
       return;
     }
-    final cropStream = CollectionRefs.instance.users.doc(userInfo?.uid ?? '').collection('crops').snapshots();
+    final cropStream = CollectionRefs.instance.users
+        .doc(userInfo?.uid ?? '')
+        .collection('crops')
+        .snapshots();
     emit(AllCropSuccessState(cropStream));
   }
 

@@ -10,12 +10,12 @@ class FirebaseServiceWrapper {
     try {
       _app = await Firebase.initializeApp(
         options: const FirebaseOptions(
-          apiKey: "AIzaSyD9QXhZXi_pMMr3jv0r36Ye0leplbp02r0",
-          authDomain: "fincaapp-a4606.firebaseapp.com",
-          projectId: "fincaapp-a4606",
-          storageBucket: "fincaapp-a4606.appspot.com",
-          messagingSenderId: "618662696347",
-          appId: "1:618662696347:web:6aebdfda9a920c91883d3e",
+          apiKey: "AIzaSyDx_RwBtt1z4RmcxGDuzBVDDSq9XdMV4EU",
+          authDomain: "app-fincas-bea92.firebaseapp.com",
+          projectId: "app-fincas-bea92",
+          storageBucket: "app-fincas-bea92.appspot.com",
+          messagingSenderId: "110398898377",
+          appId: "1:110398898377:web:fd300661c406c6c2a30d18",
         ),
       );
     } catch (e) {

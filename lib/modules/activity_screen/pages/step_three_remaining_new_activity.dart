@@ -7,7 +7,6 @@ import 'package:finca/cubits/farms/farms_state.dart';
 import 'package:finca/models/farms_screen/farm_model.dart';
 import 'package:finca/modules/farms_screen/models/crop/Crop.dart';
 import 'package:finca/modules/farms_screen/models/tag.dart';
-import 'package:finca/repository/farm/farm_repository.dart';
 import 'package:finca/utils/app_colors.dart';
 import 'package:finca/utils/app_strings.dart';
 import 'package:finca/utils/user_preferences.dart';
@@ -18,19 +17,17 @@ class StepThreeRemainingNewActivity extends StatefulWidget {
   const StepThreeRemainingNewActivity({super.key});
 
   @override
-  State<StepThreeRemainingNewActivity> createState() => _StepThreeRemainingNewActivityState();
+  State<StepThreeRemainingNewActivity> createState() =>
+      _StepThreeRemainingNewActivityState();
 }
 
-class _StepThreeRemainingNewActivityState extends State<StepThreeRemainingNewActivity> {
-  List<Tag> soilType = [
-    Tag("Option 1", true),
-    Tag("Option 2", false),
-    Tag("Option 3", false),
-    Tag("Option 4", false),
-  ];
+class _StepThreeRemainingNewActivityState
+    extends State<StepThreeRemainingNewActivity> {
   Tag? selectedSoilType;
   List<Crop> crops = [];
-  Stream<QuerySnapshot<Map<String, dynamic>>> farmsStream = const Stream.empty();
+  Stream<QuerySnapshot<Map<String, dynamic>>> farmsStream =
+      const Stream.empty();
+  int selectedFarmIndex = 0;
 
   @override
   void initState() {
@@ -95,7 +92,8 @@ class _StepThreeRemainingNewActivityState extends State<StepThreeRemainingNewAct
                     StreamBuilder(
                         stream: farmsStream,
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
                             return const Center(
                               child: CircularProgressIndicator(),
                             );
@@ -138,14 +136,7 @@ class _StepThreeRemainingNewActivityState extends State<StepThreeRemainingNewAct
                                   return GestureDetector(
                                     onTap: () {
                                       setState(() {
-                                        for (int i = 0; i < soilType.length; i++) {
-                                          if (i == index) {
-                                            soilType[i].isSelected = true;
-                                          } else {
-                                            soilType[i].isSelected = false;
-                                          }
-                                        }
-                                        selectedSoilType = soilType[index];
+                                        selectedFarmIndex = index;
                                       });
                                     },
                                     child: Column(
@@ -153,12 +144,15 @@ class _StepThreeRemainingNewActivityState extends State<StepThreeRemainingNewAct
                                         Container(
                                           padding: const EdgeInsets.all(1),
                                           margin: EdgeInsets.only(
-                                            right: index == soilType.length - 1 ? 0 : 10,
+                                            right: index == farms.length - 1
+                                                ? 0
+                                                : 10,
                                           ),
                                           decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(20),
+                                            borderRadius:
+                                                BorderRadius.circular(20),
                                             border: Border.all(
-                                              color: soilType[index].isSelected
+                                              color: selectedFarmIndex == index
                                                   ? AppColors.greenColor
                                                   : AppColors.lightGrey,
                                             ),
@@ -186,66 +180,6 @@ class _StepThreeRemainingNewActivityState extends State<StepThreeRemainingNewAct
                           }
                           return const Center(child: Text('No Farms found'));
                         }),
-                    const SizedBox(height: 10),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          AppStrings.selectWhichCrops,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.darkGrey,
-                            fontFamily: Assets.rubik,
-                          ),
-                        ),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: AppColors.lightGrey,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          width: double.infinity,
-                          child: const SizedBox(
-                            height: 200,
-                            child: Center(
-                              child: Text(
-                                'No Crops Found',
-                                style: TextStyle(
-                                  color: AppColors.darkGrey,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 20,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                        // SizedBox(
-                        //   height: 70,
-                        //   child: TagsView(
-                        //     postTags: tag,
-                        //     onTagTapped: (index) {
-                        //       setState(() {
-                        //         for (int i = 0; i < soilType.length; i++) {
-                        //           if (i == index) {
-                        //             soilType[i].isSelected = true;
-                        //           } else {
-                        //             soilType[i].isSelected = false;
-                        //           }
-                        //         }
-                        //         selectedSoilType = soilType[index];
-                        //       });
-                        //     },
-                        //   ),
-                        // ),
-                      ],
-                    ),
                     GestureDetector(
                       onTap: () {},
                       child: Container(

@@ -83,8 +83,8 @@ class CropItem extends StatelessWidget {
                             decodingWidth: 100,
                           ),
                         )
-                      : Image.network(
-                          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSVkDF8i8wPSCO875Sj0ZDB8GFcVntXNlnb0Q&usqp=CAU',
+                      : SvgPicture.asset(
+                          Assets.appIcon,
                           height: 100.0,
                           width: 100.0,
                           fit: BoxFit.fill,

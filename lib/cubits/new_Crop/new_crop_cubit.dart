@@ -17,10 +17,10 @@ class NewCropCubit extends Cubit<NewCropState> {
   NewCropCubit() : super(NewCropInitial());
   final _fireStoreService = NewCropRepository();
 
-  Future<String> _uploadImage(Uint8List? imageData, String pictureId) async {
+  Future<String> _uploadImage(Uint8List? imageData, String collectionName, String pictureId) async {
     if (imageData != null) {
-      final firebaseImagePath = 'Farms/$pictureId.jpg'; // Assuming the image format is JPEG
-      return StorageService.uploadFile(firebaseImagePath, imageData).then((value) {
+      final firebaseImagePath = '$collectionName/$pictureId.jpg'; // Assuming the image format is JPEG
+      return StorageService.uploadFileWithUIntList(firebaseImagePath, imageData).then((value) {
         return value;
       });
     }
@@ -36,6 +36,7 @@ class NewCropCubit extends Cubit<NewCropState> {
       String docId = ref.doc().id;
       String farmImage = await _uploadImage(
         polygonImage,
+        'Crops',
         docId,
       );
       Crop crop = Crop(

@@ -1,7 +1,6 @@
 import 'package:finca/modules/home_page/home_page.dart';
 import 'package:finca/modules/login_page/login_page.dart';
 import 'package:flutter/material.dart';
-
 import 'utils/user_preferences.dart';
 import 'wrappers/firebase_service_wrapper.dart';
 
@@ -23,9 +22,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: (UserPreferences().getUserInfo()?.uid == null)
-          ? const LogInPage()
-          : const HomePage(),
+      home: (UserPreferences().getUserInfo()?.uid == null) ? const LogInPage() : const HomePage(),
     );
   }
 }

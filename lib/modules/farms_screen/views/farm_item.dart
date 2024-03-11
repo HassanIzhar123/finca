@@ -89,7 +89,7 @@ class FarmItem extends StatelessWidget {
                         color: AppColors.darkGrey,
                       ),
                       Text(
-                        farmModel.location.isNotEmpty ? farmModel.location : '-',
+                        '-',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w400,
@@ -129,12 +129,12 @@ class FarmItem extends StatelessWidget {
                 SizedBox(
                   height: 20,
                   child: ListView.builder(
-                    itemCount: 2,
+                    itemCount: farmModel.crops.length,
                     shrinkWrap: true,
                     scrollDirection: Axis.horizontal,
                     itemBuilder: (context, index) {
-                      // return CropItem(cropName: "Variety $index");
-                    },
+                      return CropVarietyItem(cropName: farmModel.crops[index]);
+                      },
                   ),
                 ),
                 const SizedBox(
@@ -227,6 +227,38 @@ class FarmItem extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class CropVarietyItem extends StatelessWidget {
+  const CropVarietyItem({super.key, required this.cropName});
+
+  final String cropName;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.only(right: 5),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          color: AppColors.purple,
+        ),
+        padding: const EdgeInsets.only(
+          left: 10,
+          right: 10,
+        ),
+        child: Text(
+          cropName,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: AppColors.white,
+            fontFamily: Assets.rubik,
+          ),
+        ),
       ),
     );
   }

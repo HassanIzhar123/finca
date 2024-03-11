@@ -25,3 +25,17 @@ class FarmsFailedState extends FarmsState {
 
   const FarmsFailedState(this.message);
 }
+
+class AddFarmsLoadingState extends FarmsState {}
+
+class AddFarmsSuccessState extends FarmsState {
+  final bool isAdded;
+
+  const AddFarmsSuccessState(this.isAdded);
+}
+
+class AddFarmsFailedState extends FarmsState {
+  final String message;
+
+  const AddFarmsFailedState(this.message);
+}

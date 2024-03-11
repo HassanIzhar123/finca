@@ -54,14 +54,27 @@ class _StepOneNewFarmScreenState extends State<StepOneNewFarmScreen> {
     return const LatLng(0, 0); // Return default location if not found
   }
 
-  void _addMarker(LatLng point) {
+  Future<Uint8List?> getBytesFromAsset(String path, int width) async {
+    ByteData data = await rootBundle.load(path);
+    ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(), targetWidth: width);
+    ui.FrameInfo fi = await codec.getNextFrame();
+    return (await fi.image.toByteData(format: ui.ImageByteFormat.png))?.buffer.asUint8List();
+  }
+
+  void _addMarker(LatLng point) async {
+    final Uint8List? markerIcon = await getBytesFromAsset('assets/svg/circle.png', 30);
     final String markerIdVal = 'marker_$_markerIdCounter';
+    final icon = markerIcon != null
+        ? BitmapDescriptor.fromBytes(markerIcon)
+        : BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen);
     _markers.add(
       Marker(
         markerId: MarkerId(markerIdVal),
+        icon: icon,
         position: point,
       ),
     );
+    setState(() {});
     _markerIdCounter++;
   }
 
@@ -142,14 +155,6 @@ class _StepOneNewFarmScreenState extends State<StepOneNewFarmScreen> {
         ),
       ),
     );
-    // showDialog(
-    //   context: context,
-    //   builder: (BuildContext context) {
-    //     return AlertDialog(
-    //       content: Image.memory(imageBytes),
-    //     );
-    //   },
-    // );
   }
 
   @override

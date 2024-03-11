@@ -10,10 +10,32 @@ class StorageService {
 
   static final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  static Future<String> uploadFile(String path, Uint8List fileData) async {
+  static Future<String> uploadFileWithUIntList(String path, Uint8List fileData) async {
     try {
       final storageReference = _storage.ref().child(path);
       final uploadTask = storageReference.putData(fileData);
+
+      await uploadTask.whenComplete(() => null);
+
+      return await storageReference.getDownloadURL();
+    } on FirebaseException catch (e) {
+      throw AppException(
+        title: 'Upload Failed',
+        message: e.message ?? 'Something went wrong!',
+      );
+    } catch (e, stacktrace) {
+      log('uploadimagestacktrace: $stacktrace');
+      throw AppException(
+        title: 'Upload Failed',
+        message: e.toString(),
+      );
+    }
+  }
+
+  static Future<String> uploadFile(String path, File file) async {
+    try {
+      final storageReference = _storage.ref().child(path);
+      final uploadTask = storageReference.putFile(file);
 
       await uploadTask.whenComplete(() => null);
 

@@ -12,6 +12,7 @@ class Assets {
   static String reportIcon = '$_svgDir/reports_icon.svg';
   static String weatherIcon = '$_svgDir/weather_icon.svg';
   static String calendarIcon = '$_svgDir/calendar_icon.svg';
+  static String notebookIcon = '$_svgDir/notebook.svg';
   static String backIcon = '$_svgDir/back_icon.svg';
   static String menuIcon = '$_svgDir/menu_icon.svg';
   static String share = '$_svgDir/social_share.svg';

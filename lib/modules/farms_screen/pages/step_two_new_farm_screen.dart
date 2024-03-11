@@ -7,6 +7,7 @@ import 'package:finca/views/tags_view.dart';
 import 'package:finca/utils/app_colors.dart';
 import 'package:finca/utils/app_strings.dart';
 import 'package:finca/views/custom_text_field.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_maps_flutter_platform_interface/src/types/polygon.dart';
@@ -65,13 +66,18 @@ class _StepTwoNewFarmScreenState extends State<StepTwoNewFarmScreen> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Column(
-                        children: [
-                          const SizedBox(
-                            height: 8,
-                          ),
-                          SvgPicture.asset(Assets.backIcon),
-                        ],
+                      GestureDetector(
+                        onTap: (){
+                          Navigator.of(context).pop();
+                        },
+                        child: Column(
+                          children: [
+                            const SizedBox(
+                              height: 8,
+                            ),
+                            SvgPicture.asset(Assets.backIcon),
+                          ],
+                        ),
                       ),
                       const SizedBox(
                         width: 10,

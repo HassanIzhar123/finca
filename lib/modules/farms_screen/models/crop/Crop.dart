@@ -41,4 +41,18 @@ class Crop {
       SowingEnum.values.firstWhere((element) => element.name == json['sowing']),
     );
   }
+
+  //empty
+  factory Crop.empty() {
+    return Crop(
+      '',
+      '',
+      '',
+      '',
+      [],
+      '',
+      DateTime.now(),
+      SowingEnum.sowing,
+    );
+  }
 }

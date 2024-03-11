@@ -1,24 +1,45 @@
 import 'dart:developer';
-
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:finca/assets/assets.dart';
+import 'package:finca/cubits/farms/farm_cubit.dart';
+import 'package:finca/cubits/farms/farms_state.dart';
 import 'package:finca/models/farms_screen/farm_model.dart';
 import 'package:finca/modules/farms_screen/models/crop/Crop.dart';
+import 'package:finca/modules/farms_screen/models/tag.dart';
+import 'package:finca/services/storage_service.dart';
 import 'package:finca/utils/app_colors.dart';
 import 'package:finca/utils/app_strings.dart';
+import 'package:finca/utils/collection_refs.dart';
+import 'package:finca/utils/user_preferences.dart';
 import 'package:finca/views/custom_text_field.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class StepFourNewFarmScreen extends StatefulWidget {
   const StepFourNewFarmScreen({
     super.key,
-    required this.crop,
+    required this.selectedCrops,
+    required this.name,
+    required this.size,
+    required this.selectedSoilType,
+    this.description,
+    required this.selectedPolygons,
+    required this.polygonImage,
   });
 
-  final Crop crop;
+  final List<Crop> selectedCrops;
+  final String name;
+  final String size;
+  final Tag selectedSoilType;
+  final String? description;
+  final Set<Polygon> selectedPolygons;
+  final Uint8List polygonImage;
 
   @override
   _StepFourNewFarmScreenState createState() => _StepFourNewFarmScreenState();
@@ -35,11 +56,9 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
   String? selectedSoilStudy;
 
   String? selectedCertification;
-  DateTime? selectedSoilDate = DateTime.now(),
-      selectedCertificationDate = DateTime.now();
-  List<String> attachedFile = [];
-  String? _fileName;
-  String? _filePath;
+  DateTime? selectedSoilDate = DateTime.now(), selectedCertificationDate = DateTime.now();
+  List<File> attachedFiles = [];
+  bool isLoading = false;
 
   @override
   initState() {
@@ -55,15 +74,11 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
     );
 
     if (result != null) {
-      PlatformFile file = result.files.first;
-
+      // PlatformFile file = result.files.first;
+      File file = File(result.files.first.path!);
       setState(() {
-        _fileName = file.name;
-        _filePath = file.path;
-        attachedFile.add(_fileName ?? "");
+        attachedFiles.add(file);
       });
-    } else {
-      // User canceled the picker
     }
   }
 
@@ -76,147 +91,192 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Container(
-          color: Colors.white,
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.only(
-                left: 5,
-                right: 16.0,
-                top: 16.0,
-                bottom: 16.0,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Column(
-                        children: [
-                          const SizedBox(
-                            height: 8,
-                          ),
-                          SvgPicture.asset(Assets.backIcon),
-                        ],
-                      ),
-                      const SizedBox(
-                        width: 10,
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            AppStrings.newFarm,
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.greenColor,
-                              fontFamily: Assets.rubik,
-                            ),
-                          ),
-                          Text(
-                            AppStrings.stepFour,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.darkGrey,
-                              fontFamily: Assets.rubik,
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 15,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  Container(
-                    margin: const EdgeInsets.only(
-                      left: 25,
-                      right: 25,
+    return BlocProvider(
+      create: (context) => FarmCubit(),
+      child: BlocConsumer<FarmCubit, FarmsState>(
+        listener: (context, state) {
+          log('stepThreeNewFarmScreen: $state');
+          if (state is AddFarmsLoadingState) {
+            isLoading = true;
+          } else if (state is AddFarmsSuccessState) {
+            isLoading = false;
+            Navigator.of(context).pop();
+            Navigator.of(context).pop();
+            Navigator.of(context).pop();
+            Navigator.of(context).pop();
+          } else if (state is AddFarmsFailedState) {
+            isLoading = false;
+            _showErrorDialog();
+          }
+        },
+        builder: (BuildContext context, FarmsState state) {
+          log('buildState: $state');
+          return Scaffold(
+            body: SafeArea(
+              child: Container(
+                color: Colors.white,
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.only(
+                      left: 5,
+                      right: 16.0,
+                      top: 16.0,
+                      bottom: 16.0,
                     ),
                     child: Column(
-                      children: [
-                        const SizedBox(height: 20),
-                        _buildDropdown(
-                          'Soil study:',
-                          soilStudies,
-                          selectedSoilStudy,
-                              (value) {
-                            setState(() {
-                              selectedSoilStudy = value;
-                            });
-                          },
-                        ),
-                        _buildDatePicker('Date:', selectedSoilDate, (value) {
-                          setState(() {
-                            selectedSoilDate = value;
-                          });
-                        }),
-                        const SizedBox(height: 20),
-                        _buildFileAttachmentSection(),
-                        _buildDropdown(
-                          'Agricultural Certifications obtained:',
-                          certifications,
-                          selectedCertification,
-                              (value) {
-                            setState(() {
-                              selectedCertification = value;
-                            });
-                          },
-                        ),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                        const Divider(),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        _buildDatePicker('Date:', selectedCertificationDate, (value) {
-                          setState(() {
-                            selectedCertificationDate = value;
-                          });
-                        }),
-                        const SizedBox(height: 20),
-                        CupertinoButton(
-                          color: AppColors.greenColor,
-                          child: const Center(
-                            child: Text(
-                              'Finish',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.white,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: Column(
+                                children: [
+                                  const SizedBox(
+                                    height: 8,
+                                  ),
+                                  SvgPicture.asset(Assets.backIcon),
+                                ],
                               ),
-                              overflow: TextOverflow.ellipsis,
                             ),
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  AppStrings.newFarm,
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.greenColor,
+                                    fontFamily: Assets.rubik,
+                                  ),
+                                ),
+                                Text(
+                                  AppStrings.stepFour,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.darkGrey,
+                                    fontFamily: Assets.rubik,
+                                  ),
+                                ),
+                                const SizedBox(
+                                  height: 15,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        Container(
+                          margin: const EdgeInsets.only(
+                            left: 25,
+                            right: 25,
                           ),
-                          onPressed: () {
-                            if (checkIfFieldsAreEmpty()) {
-                              _showErrorDialog();
-                            } else {
-                              // FarmModel farm = FarmModel(
-                              //   soilStudy: selectedSoilStudy ?? '',
-                              //   soilStudyDate: selectedSoilDate ?? DateTime.now(),
-                              //   agriculturalCertification: selectedCertification ?? '',
-                              //   soilStudyLink: attachedFile,
-                              //   agriculturalCertificationDate: selectedCertificationDate ?? DateTime.now(),
-                              // );
-                              // context.read<>().addFarm(farm);
-                            }
-                          },
+                          child: Column(
+                            children: [
+                              const SizedBox(height: 20),
+                              _buildDropdown(
+                                'Soil study:',
+                                soilStudies,
+                                selectedSoilStudy,
+                                (value) {
+                                  setState(() {
+                                    selectedSoilStudy = value;
+                                  });
+                                },
+                              ),
+                              _buildDatePicker('Date:', selectedSoilDate, (value) {
+                                setState(() {
+                                  selectedSoilDate = value;
+                                });
+                              }),
+                              const SizedBox(height: 20),
+                              _buildFileAttachmentSection(),
+                              const SizedBox(
+                                height: 10,
+                              ),
+                              const Divider(),
+                              const SizedBox(
+                                height: 20,
+                              ),
+                              _buildDropdown(
+                                'Agricultural Certifications obtained:',
+                                certifications,
+                                selectedCertification,
+                                (value) {
+                                  setState(() {
+                                    selectedCertification = value;
+                                  });
+                                },
+                              ),
+                              const SizedBox(
+                                height: 10,
+                              ),
+                              _buildDatePicker('Date:', selectedCertificationDate, (value) {
+                                setState(() {
+                                  selectedCertificationDate = value;
+                                });
+                              }),
+                              const SizedBox(height: 20),
+                              CupertinoButton(
+                                color: AppColors.greenColor,
+                                onPressed: isLoading
+                                    ? null
+                                    : () async {
+                                        if (checkIfFieldsAreEmpty()) {
+                                          _showErrorDialog();
+                                        } else {
+                                          String farmId = CollectionRefs.instance
+                                              .crops(UserPreferences().getUserInfo()?.uid ?? '')
+                                              .id;
+                                          if (context.mounted) {
+                                            context.read<FarmCubit>().addNewFarm(
+                                                  farmId,
+                                                  widget.name,
+                                                  double.parse(widget.size),
+                                                  widget.description ?? '',
+                                                  widget.selectedPolygons,
+                                                  widget.selectedCrops,
+                                                  selectedSoilStudy ?? '',
+                                                  selectedSoilDate ?? DateTime.now(),
+                                                  attachedFiles,
+                                                  selectedCertification ?? '',
+                                                  selectedCertificationDate ?? DateTime.now(),
+                                                );
+                                          }
+                                        }
+                                      },
+                                child: Center(
+                                  child: isLoading
+                                      ? const CupertinoActivityIndicator()
+                                      : const Text(
+                                          'Finish',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.white,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -249,8 +309,7 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
             ),
             items: items
                 .map(
-                  (String item) =>
-                  DropdownMenuItem<String>(
+                  (String item) => DropdownMenuItem<String>(
                     value: item,
                     child: Text(
                       item,
@@ -262,7 +321,7 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-            )
+                )
                 .toList(),
             value: selectedItem,
             onChanged: (String? value) {
@@ -270,10 +329,7 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
             },
             buttonStyleData: ButtonStyleData(
               height: 50,
-              width: MediaQuery
-                  .of(context)
-                  .size
-                  .width,
+              width: MediaQuery.of(context).size.width,
               padding: const EdgeInsets.only(left: 14, right: 14),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
@@ -348,103 +404,103 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
             color: AppColors.lightGrey,
           ),
           padding: const EdgeInsets.all(20),
-          child: attachedFile.isNotEmpty
+          child: attachedFiles.isNotEmpty
               ? Column(
-            children: [
-              ListView.builder(
-                shrinkWrap: true,
-                itemCount: attachedFile.length,
-                itemBuilder: (context, index) {
-                  return Column(
-                    children: [
-                      Center(
+                  children: [
+                    ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: attachedFiles.length,
+                      itemBuilder: (context, index) {
+                        return Column(
+                          children: [
+                            Center(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      attachedFiles[index].path.split('/').last,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.normal,
+                                        color: AppColors.darkGrey,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        attachedFiles.removeAt(index);
+                                      });
+                                    },
+                                    child: SvgPicture.asset(Assets.delete),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Divider(),
+                          ],
+                        );
+                      },
+                    ),
+                    CupertinoButton(
+                      padding: EdgeInsets.zero,
+                      child: Center(
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Expanded(
-                              child: Text(
-                                attachedFile[index],
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.normal,
-                                  color: AppColors.darkGrey,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                            SvgPicture.asset(
+                              Assets.createBtn,
+                              height: 20,
+                              width: 20,
                             ),
                             const SizedBox(width: 10),
-                            GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  attachedFile.removeAt(index);
-                                });
-                              },
-                              child: SvgPicture.asset(Assets.delete),
+                            const Text(
+                              'Attach Pdf',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.darkGrey,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
                       ),
-                      const Divider(),
-                    ],
-                  );
-                },
-              ),
-              CupertinoButton(
-                padding: EdgeInsets.zero,
-                child: Center(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SvgPicture.asset(
-                        Assets.createBtn,
-                        height: 20,
-                        width: 20,
-                      ),
-                      const SizedBox(width: 10),
-                      const Text(
-                        'Attach Pdf',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.darkGrey,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                onPressed: () {
-                  _pickPDFFile();
-                },
-              ),
-            ],
-          )
-              : CupertinoButton(
-            padding: EdgeInsets.zero,
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SvgPicture.asset(
-                    Assets.createBtn,
-                  ),
-                  const SizedBox(height: 15),
-                  const Text(
-                    'Attach PDF',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.darkGrey,
+                      onPressed: () {
+                        _pickPDFFile();
+                      },
                     ),
-                    overflow: TextOverflow.ellipsis,
+                  ],
+                )
+              : CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SvgPicture.asset(
+                          Assets.createBtn,
+                        ),
+                        const SizedBox(height: 15),
+                        const Text(
+                          'Attach PDF',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.darkGrey,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
-            ),
-            onPressed: () {
-              _pickPDFFile();
-            },
-          ),
+                  onPressed: () {
+                    _pickPDFFile();
+                  },
+                ),
         ),
         const SizedBox(height: 20),
       ],
@@ -455,7 +511,8 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
     return selectedSoilStudy == null ||
         selectedSoilDate == null ||
         selectedCertification == null ||
-        selectedCertificationDate == null;
+        selectedCertificationDate == null ||
+        attachedFiles.isEmpty;
   }
 
   void _showErrorDialog() {

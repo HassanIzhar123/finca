@@ -21,6 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/state_manager.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 
@@ -51,6 +52,7 @@ class _StepThreeNewFarmScreenState extends State<StepThreeNewFarmScreen> {
   Stream<QuerySnapshot<Map<String, dynamic>>> cropsStream = const Stream.empty();
   int selectedIndex = -1;
   List<Crop> crops = [];
+  Set<int> selectedIndexes = {};
 
   @override
   Widget build(BuildContext context) {
@@ -240,14 +242,24 @@ class _StepThreeNewFarmScreenState extends State<StepThreeNewFarmScreen> {
                               bottom: 20,
                             ),
                             child: GestureDetector(
-                              onTap: selectedIndex == -1
+                              onTap: selectedIndexes.isEmpty
                                   ? null
                                   : () {
-                                      log("selectedIndex: " + selectedIndex.toString());
+                                      List<Crop> selectedCrops = [];
+                                      for (var index in selectedIndexes) {
+                                        selectedCrops.add(crops[index]);
+                                      }
+
                                       Navigator.of(context).push(
                                         MaterialPageRoute(
                                           builder: (context) => StepFourNewFarmScreen(
-                                            crop: crops[selectedIndex],
+                                            selectedCrops: selectedCrops,
+                                            name: widget.name,
+                                            size: widget.size,
+                                            selectedSoilType: widget.selectedSoilType,
+                                            description: widget.description,
+                                            selectedPolygons: widget.selectedPolygons,
+                                            polygonImage: widget.polygonImage,
                                           ),
                                         ),
                                       );
@@ -295,7 +307,6 @@ class _StepThreeNewFarmScreenState extends State<StepThreeNewFarmScreen> {
   }
 
   Widget cropsList(Stream<QuerySnapshot<Map<String, dynamic>>> cropsStream) {
-    final userInfo = UserPreferences().getUserInfo();
     return StreamBuilder(
         stream: cropsStream,
         builder: (context, snapshot) {
@@ -323,13 +334,20 @@ class _StepThreeNewFarmScreenState extends State<StepThreeNewFarmScreen> {
                     crop: crops[index],
                     index: index,
                     isCropDeleting: isCropDeleting,
-                    isSelected: selectedIndex == index,
+                    isSelected: selectedIndexes.contains(index),
                     onSelectCrop: (int index) {
                       setState(() {
-                        selectedIndex = -1;
-                        selectedIndex = index;
-                        log('index: $index');
+                        if (selectedIndexes.contains(index)) {
+                          selectedIndexes.remove(index);
+                        } else {
+                          selectedIndexes.add(index);
+                        }
                       });
+                      // setState(() {
+                      //   selectedIndex = -1;
+                      //   selectedIndex = index;
+                      //   log('index: $index');
+                      // });
                     },
                     onDeleteCrop: (crop) {
                       context.read<NewCropCubit>().deleteSpecificCrop(crop);

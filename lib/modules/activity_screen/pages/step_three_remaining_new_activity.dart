@@ -30,7 +30,17 @@ class _StepThreeRemainingNewActivityState extends State<StepThreeRemainingNewAct
   ];
   Tag? selectedSoilType;
   List<Crop> crops = [];
-  Stream<List<FarmModel>>? farmsStream;
+  Stream<QuerySnapshot<Map<String, dynamic>>> farmsStream = const Stream.empty();
+
+  @override
+  void initState() {
+    farmsStream = FirebaseFirestore.instance
+        .collection('users')
+        .doc(UserPreferences().getUserInfo()?.uid ?? '')
+        .collection('farms')
+        .snapshots();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +52,7 @@ class _StepThreeRemainingNewActivityState extends State<StepThreeRemainingNewAct
         log("stepthreestate: $state");
         if (state is FarmsLoadingState) {
         } else if (state is FarmsSuccessState) {
-          farmsStream = state.farms;
+          // farmsStream = state.farms;
         } else if (state is FarmsFailedState) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -83,11 +93,7 @@ class _StepThreeRemainingNewActivityState extends State<StepThreeRemainingNewAct
                     ),
                     const SizedBox(height: 20),
                     StreamBuilder(
-                        stream: FirebaseFirestore.instance
-                            .collection('users')
-                            .doc(UserPreferences().getUserInfo()?.uid ?? '')
-                            .collection('farms')
-                            .snapshots(),
+                        stream: farmsStream,
                         builder: (context, snapshot) {
                           if (snapshot.connectionState == ConnectionState.waiting) {
                             return const Center(
@@ -98,7 +104,6 @@ class _StepThreeRemainingNewActivityState extends State<StepThreeRemainingNewAct
                           if (snapshot.data != null) {
                             final farms = snapshot.data!.docs.map((e) {
                               final data = FarmModel.fromJson(e.data());
-                              log("event: " + data.toJson().toString());
                               return data;
                             }).toList();
                             if (farms.isEmpty) {
@@ -132,16 +137,16 @@ class _StepThreeRemainingNewActivityState extends State<StepThreeRemainingNewAct
                                 itemBuilder: (context, index) {
                                   return GestureDetector(
                                     onTap: () {
-                                      // setState(() {
-                                      //   for (int i = 0; i < soilType.length; i++) {
-                                      //     if (i == index) {
-                                      //       soilType[i].isSelected = true;
-                                      //     } else {
-                                      //       soilType[i].isSelected = false;
-                                      //     }
-                                      //   }
-                                      //   selectedSoilType = soilType[index];
-                                      // });
+                                      setState(() {
+                                        for (int i = 0; i < soilType.length; i++) {
+                                          if (i == index) {
+                                            soilType[i].isSelected = true;
+                                          } else {
+                                            soilType[i].isSelected = false;
+                                          }
+                                        }
+                                        selectedSoilType = soilType[index];
+                                      });
                                     },
                                     child: Column(
                                       children: [
@@ -181,7 +186,7 @@ class _StepThreeRemainingNewActivityState extends State<StepThreeRemainingNewAct
                           }
                           return const Center(child: Text('No Farms found'));
                         }),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 10),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,

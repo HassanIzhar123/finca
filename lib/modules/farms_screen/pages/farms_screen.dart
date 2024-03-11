@@ -1,12 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:finca/assets/assets.dart';
 import 'package:finca/models/farms_screen/farm_model.dart';
+import 'package:finca/modules/farms_screen/models/crop/Crop.dart';
 import 'package:finca/modules/farms_screen/pages/map_sample.dart';
 import 'package:finca/modules/farms_screen/pages/step_one_new_farm_screen.dart';
 import 'package:finca/modules/farms_screen/views/farm_item.dart';
 import 'package:finca/utils/app_colors.dart';
 import 'package:finca/utils/app_strings.dart';
+import 'package:finca/utils/global_ui.dart';
 import 'package:finca/utils/user_preferences.dart';
+import 'package:finca/utils/utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -56,9 +59,16 @@ class _FarmsScreenState extends State<FarmsScreen> {
                       ),
                     ),
                     ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context)
-                            .push(MaterialPageRoute(builder: (context) => const StepOneNewFarmScreen()));
+                      onPressed: () async {
+                        if (await Utils().checkIfInternetIsAvailable()) {
+                          if (context.mounted) {
+                            Navigator.of(context)
+                                .push(MaterialPageRoute(builder: (context) => const StepOneNewFarmScreen()));
+                          }
+                        } else {
+                          GlobalUI.showSnackBar('Please turn on internet!');
+                        }
+
                         // Navigator.of(context).push(MaterialPageRoute(builder: (context) => MapSample()));
                       },
                       style: ElevatedButton.styleFrom(
@@ -146,5 +156,15 @@ class _FarmsScreenState extends State<FarmsScreen> {
         ),
       ),
     );
+  }
+
+  Future<Crop> getCrop(String cropId) async {
+    final crop = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(UserPreferences().getUserInfo()?.uid ?? '')
+        .collection('crops')
+        .doc(cropId)
+        .get();
+    return Crop.fromJson(crop.data()!);
   }
 }

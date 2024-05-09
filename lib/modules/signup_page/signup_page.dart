@@ -25,6 +25,7 @@ class _SignUpPageState extends State<SignUpPage> {
   String password = '';
   String rePassword = '';
   bool isLoading = false;
+  ValueNotifier userCredential = ValueNotifier('');
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +43,7 @@ class _SignUpPageState extends State<SignUpPage> {
         } else if (state is SignUpSuccessState) {
           isLoading = false;
           if (state.isSignedIn) {
-            Navigator.of(context).push(MaterialPageRoute(builder: (context) => const HomePage()));
+            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const HomePage()));
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Sign Up Successful'),
@@ -51,6 +52,34 @@ class _SignUpPageState extends State<SignUpPage> {
           }
         } else if (state is SignUpFailedState) {
           isLoading = false;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+            ),
+          );
+        } else if (state is GoogleSignUpLoadingState) {
+          isLoading = true;
+          showDialog(
+            context: context,
+            builder: (context) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            },
+          );
+        } else if (state is GoogleSignUpSuccessState) {
+          isLoading = false;
+          if (state.isSignedIn) {
+            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const HomePage()));
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Sign Up Successful'),
+              ),
+            );
+          }
+        } else if (state is GoogleSignUpFailedState) {
+          isLoading = false;
+          Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
@@ -261,66 +290,62 @@ class _SignUpPageState extends State<SignUpPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      GestureDetector(
-                        onTap: () {},
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: const BorderRadius.all(
-                              Radius.circular(12.0),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(0.2),
-                                spreadRadius: 4,
-                                blurRadius: 10,
-                                offset: const Offset(0, 3),
-                              )
-                            ],
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(12.0),
                           ),
-                          child: IconButton(
-                            style: ButtonStyle(
-                              padding: MaterialStateProperty.all(
-                                const EdgeInsets.all(12),
-                              ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.2),
+                              spreadRadius: 4,
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
+                            )
+                          ],
+                        ),
+                        child: IconButton(
+                          style: ButtonStyle(
+                            padding: MaterialStateProperty.all(
+                              const EdgeInsets.all(12),
                             ),
-                            onPressed: () {},
-                            icon: SvgPicture.asset(
-                              Assets.googleLogo,
-                            ),
+                          ),
+                          onPressed: () {
+                            context.read<SignUpCubit>().signUpWithGoogle();
+                          },
+                          icon: SvgPicture.asset(
+                            Assets.googleLogo,
                           ),
                         ),
                       ),
                       const SizedBox(
                         width: 15,
                       ),
-                      GestureDetector(
-                        onTap: () {},
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF1877F2),
-                            borderRadius: const BorderRadius.all(
-                              Radius.circular(12.0),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(0.2),
-                                spreadRadius: 4,
-                                blurRadius: 10,
-                                offset: const Offset(0, 3),
-                              )
-                            ],
+                      Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1877F2),
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(12.0),
                           ),
-                          child: IconButton(
-                            style: ButtonStyle(
-                              padding: MaterialStateProperty.all(
-                                const EdgeInsets.all(12),
-                              ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.2),
+                              spreadRadius: 4,
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
+                            )
+                          ],
+                        ),
+                        child: IconButton(
+                          style: ButtonStyle(
+                            padding: MaterialStateProperty.all(
+                              const EdgeInsets.all(12),
                             ),
-                            onPressed: () {},
-                            icon: SvgPicture.asset(
-                              Assets.facebookLogo,
-                            ),
+                          ),
+                          onPressed: () {},
+                          icon: SvgPicture.asset(
+                            Assets.facebookLogo,
                           ),
                         ),
                       ),

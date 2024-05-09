@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 
 @immutable
@@ -23,4 +24,18 @@ class SignUpFailedState extends SignUpState {
   final String message;
 
   const SignUpFailedState(this.message);
+}
+
+class GoogleSignUpLoadingState extends SignUpState {}
+
+class GoogleSignUpSuccessState extends SignUpState {
+  final bool isSignedIn;
+
+  const GoogleSignUpSuccessState(this.isSignedIn);
+}
+
+class GoogleSignUpFailedState extends SignUpState {
+  final String message;
+
+  const GoogleSignUpFailedState(this.message);
 }

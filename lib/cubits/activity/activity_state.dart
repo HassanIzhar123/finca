@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:finca/models/farms_screen/farm_model.dart';
 import 'package:finca/modules/activity_screen/models/activity_model.dart';
+import 'package:finca/modules/farms_screen/models/tag.dart';
 import 'package:flutter/cupertino.dart';
 
 @immutable
@@ -16,9 +17,9 @@ class ActivityInitial extends ActivityState {}
 class ActivityLoadingState extends ActivityState {}
 
 class ActivitySuccessState extends ActivityState {
-  final Stream<List<ActivityModel>> activity;
+  final List<Tag> activities;
 
-  const ActivitySuccessState(this.activity);
+  const ActivitySuccessState(this.activities);
 }
 
 class ActivityFailedState extends ActivityState {
@@ -44,7 +45,7 @@ class AddActivityFailedState extends ActivityState {
 class FarmsLoadingState extends ActivityState {}
 
 class FarmsSuccessState extends ActivityState {
-  final Stream<List<FarmModel>> farms;
+  final List<FarmModel> farms;
 
   const FarmsSuccessState(this.farms);
 }
@@ -53,4 +54,18 @@ class FarmsFailedState extends ActivityState {
   final String message;
 
   const FarmsFailedState(this.message);
+}
+
+class ActivityDateLoadingState extends ActivityState {}
+
+class ActivityDateSuccessState extends ActivityState {
+  final Stream<List<ActivityModel>> activities;
+
+  const ActivityDateSuccessState(this.activities);
+}
+
+class ActivityDateFailedState extends ActivityState {
+  final String message;
+
+  const ActivityDateFailedState(this.message);
 }

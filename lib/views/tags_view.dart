@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:finca/modules/farms_screen/models/tag.dart';
 import 'package:finca/utils/app_colors.dart';
 import 'package:flutter/cupertino.dart';
@@ -6,12 +8,10 @@ import 'package:flutter/material.dart';
 class TagsView extends StatelessWidget {
   const TagsView({
     super.key,
-
     required this.postTags,
     required this.onTagTapped,
   });
 
-  // final double height, width;
   final List<Tag> postTags;
   final Function(int index) onTagTapped;
 

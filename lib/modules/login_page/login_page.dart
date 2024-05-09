@@ -8,6 +8,7 @@ import 'package:finca/modules/signup_page/signup_page.dart';
 import 'package:finca/utils/app_colors.dart';
 import 'package:finca/utils/app_strings.dart';
 import 'package:finca/views/custom_text_field.dart';
+import 'package:finca/views/passwrod_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -24,6 +25,7 @@ class _LogInPageState extends State<LogInPage> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   String email = '', password = '';
+  bool isPasswordVisible = false;
 
   @override
   Widget build(BuildContext context) {
@@ -38,10 +40,26 @@ class _LogInPageState extends State<LogInPage> {
           isLoading = false;
           if (state.authModel != null) {
             Navigator.pop(context);
-            Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const HomePage()));
+            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const HomePage()));
           }
         } else if (state is LogInFailedState) {
+          isLoading = false;
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+            ),
+          );
+        }else if (state is GoogleLogInLoadingState) {
+          isLoading = true;
+          showLoadingDialog(context);
+        } else if (state is GoogleLogInSuccessState) {
+          isLoading = false;
+          if (state.isLoggedIn) {
+            Navigator.pop(context);
+            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const HomePage()));
+          }
+        } else if (state is GoogleLogInFailedState) {
           isLoading = false;
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
@@ -104,14 +122,19 @@ class _LogInPageState extends State<LogInPage> {
                   const SizedBox(
                     height: 15,
                   ),
-                  CustomTextField(
-                    name: '',
+                  PasswordTextField(
                     hintText: AppStrings.enterPassword,
-                    showName: false,
-                    multiLine: false,
                     onChange: (value) {
                       setState(() {
                         password = value;
+                      });
+                    },
+                    isPasswordVisible: isPasswordVisible,
+                    controller: passwordController,
+                    onSubmitted: (value) {},
+                    onPasswordButtonClicked: (isPasswordVisible) {
+                      setState(() {
+                        this.isPasswordVisible = isPasswordVisible;
                       });
                     },
                   ),
@@ -140,9 +163,7 @@ class _LogInPageState extends State<LogInPage> {
                     onPressed: isLoading
                         ? null
                         : () {
-                            context
-                                .read<LogInCubit>()
-                                .logInUser(email, password);
+                            context.read<LogInCubit>().logInUser(email, password);
                           },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.greenColor,
@@ -168,8 +189,7 @@ class _LogInPageState extends State<LogInPage> {
                     children: [
                       GestureDetector(
                         onTap: () {
-                          Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => const SignUpPage()));
+                          Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SignUpPage()));
                         },
                         child: Text(
                           AppStrings.dntHaveAccount,
@@ -257,7 +277,9 @@ class _LogInPageState extends State<LogInPage> {
                                 const EdgeInsets.all(12),
                               ),
                             ),
-                            onPressed: () {},
+                            onPressed: () async {
+                              await context.read<LogInCubit>().logInWithGoogle();
+                            },
                             icon: SvgPicture.asset(
                               Assets.googleLogo,
                             ),

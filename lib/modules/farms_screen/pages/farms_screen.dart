@@ -1,18 +1,15 @@
+import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:finca/assets/assets.dart';
 import 'package:finca/models/farms_screen/farm_model.dart';
 import 'package:finca/modules/farms_screen/models/crop/Crop.dart';
-import 'package:finca/modules/farms_screen/pages/map_sample.dart';
 import 'package:finca/modules/farms_screen/pages/step_one_new_farm_screen.dart';
 import 'package:finca/modules/farms_screen/views/farm_item.dart';
 import 'package:finca/utils/app_colors.dart';
 import 'package:finca/utils/app_strings.dart';
-import 'package:finca/utils/global_ui.dart';
 import 'package:finca/utils/user_preferences.dart';
-import 'package:finca/utils/utils.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class FarmsScreen extends StatefulWidget {
   const FarmsScreen({super.key});
@@ -22,6 +19,47 @@ class FarmsScreen extends StatefulWidget {
 }
 
 class _FarmsScreenState extends State<FarmsScreen> {
+  List<FarmModel> farms = [];
+  Stream<QuerySnapshot<Map<String, dynamic>>> farmStream = const Stream.empty();
+
+  @override
+  void initState() {
+    farmStream = FirebaseFirestore.instance
+        .collection('users')
+        .doc(UserPreferences().getUserInfo()?.uid ?? '')
+        .collection('farms')
+        .snapshots();
+    farmStream.listen((event) {
+      farms.clear();
+      farms = event.docs.map((e) {
+        var data = FarmModel.fromJson(e.data());    String cropId = data.cropId;
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(UserPreferences().getUserInfo()?.uid ?? '')
+            .collection('crops')
+            .doc(cropId)
+            .snapshots()
+            .listen((value) {
+          log("croipData: ${value.data()}");
+          if (value.data() != null) {
+            data.crop = Crop.fromJson(value.data()!);
+          } else {
+            data.crop = Crop.empty();
+          }
+          setState(() {});
+        });
+        // getCrop(data.cropId).then((value) {
+        //   data.crop = value;
+        //   setState(() {});
+        // });
+        return data;
+      }).toList();
+      log('farms: $farms');
+      setState(() {});
+    });
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,16 +98,7 @@ class _FarmsScreenState extends State<FarmsScreen> {
                     ),
                     ElevatedButton(
                       onPressed: () async {
-                        if (await Utils().checkIfInternetIsAvailable()) {
-                          if (context.mounted) {
-                            Navigator.of(context)
-                                .push(MaterialPageRoute(builder: (context) => const StepOneNewFarmScreen()));
-                          }
-                        } else {
-                          GlobalUI.showSnackBar('Please turn on internet!');
-                        }
-
-                        // Navigator.of(context).push(MaterialPageRoute(builder: (context) => MapSample()));
+                        await openFarmForm();
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.greenColor,
@@ -99,55 +128,26 @@ class _FarmsScreenState extends State<FarmsScreen> {
             const SizedBox(
               height: 10,
             ),
-            StreamBuilder(
-              stream: FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(UserPreferences().getUserInfo()?.uid ?? '')
-                  .collection('farms')
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
-                if (snapshot.hasError) {
-                  return const Center(
-                    child: Text('Error'),
-                  );
-                }
-                if (snapshot.data == null) {
-                  return const Center(
-                    child: Text('No data found'),
-                  );
-                }
-                if (snapshot.data!.docs.isEmpty) {
-                  return const Center(
-                    child: Text('No data found'),
-                  );
-                }
-                final farms = snapshot.data!.docs.map((e) {
-                  final data = FarmModel.fromJson(e.data());
-                  return data;
-                }).toList();
-                return ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: farms.length,
-                  physics: const BouncingScrollPhysics(),
-                  itemBuilder: (context, index) {
-                    return FarmItem(
-                      index: index,
-                      itemSize: farms.length,
-                      farmModel: farms[index],
-                      onDeleteTapped: (FarmModel farmModel) {
-                        FirebaseFirestore.instance
-                            .collection('users')
-                            .doc(UserPreferences().getUserInfo()?.uid ?? '')
-                            .collection('farms')
-                            .doc(farmModel.farmId)
-                            .delete();
-                      },
-                    );
+            ListView.builder(
+              shrinkWrap: true,
+              itemCount: farms.length,
+              physics: const BouncingScrollPhysics(),
+              itemBuilder: (context, index) {
+                return FarmItem(
+                  index: index,
+                  itemSize: farms.length,
+                  farmModel: farms[index],
+                  onDeleteTapped: (FarmModel farmModel) {
+                    log('hi i am here');
+                    FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(UserPreferences().getUserInfo()?.uid ?? '')
+                        .collection('farms')
+                        .doc(farmModel.farmId)
+                        .delete();
+                  },
+                  onEditTapped: (FarmModel farmModel) async {
+                    await openFarmForm(farm: farms[index], isUpdating: true);
                   },
                 );
               },
@@ -158,13 +158,71 @@ class _FarmsScreenState extends State<FarmsScreen> {
     );
   }
 
-  Future<Crop> getCrop(String cropId) async {
-    final crop = await FirebaseFirestore.instance
+  static Future<Crop> getCrop(String cropId) async {
+    return await FirebaseFirestore.instance
         .collection('users')
         .doc(UserPreferences().getUserInfo()?.uid ?? '')
         .collection('crops')
         .doc(cropId)
-        .get();
-    return Crop.fromJson(crop.data()!);
+        .get()
+        .timeout(const Duration(seconds: 10))
+        .then((value) {
+      log('value: ${value.data()}');
+      if (value.data() != null) {
+        return Crop.fromJson(value.data()!);
+      } else {
+        return Crop.empty();
+      }
+    });
+  }
+
+  Future<void> openFarmForm({
+    bool isUpdating = false,
+    FarmModel? farm,
+  }) async {
+    if (await Permission.location.isGranted) {
+      if (context.mounted) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => StepOneNewFarmScreen(
+              isUpdating: isUpdating,
+              farm: farm,
+            ),
+          ),
+        );
+      }
+    } else {
+      await Permission.location.request();
+      if (await Permission.location.isGranted) {
+        if (context.mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => StepOneNewFarmScreen(
+                isUpdating: isUpdating,
+                farm: farm,
+              ),
+            ),
+          );
+        }
+      } else if (await Permission.location.isDenied) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please allow location permission to continue'),
+            ),
+          );
+        }
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please allow location permission in settings to continue'),
+            ),
+          );
+        }
+      }
+
+      log('Permission.location: ${await Permission.location.isGranted}');
+    }
   }
 }

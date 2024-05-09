@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "110398898377",
+    "project_id": "app-fincas-bea92",
+    "storage_bucket": "app-fincas-bea92.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:110398898377:android:a86455779e5368d8a30d18",
+        "android_client_info": {
+          "package_name": "com.orixity.app_fincas"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "110398898377-rmfp8puch9btkeqrnpbfi71aqgu4jiuj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCW1R1QwEDOayJXAbu1ugmeKTtiiBSieQc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "110398898377-rmfp8puch9btkeqrnpbfi71aqgu4jiuj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

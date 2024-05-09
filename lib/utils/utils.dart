@@ -1,8 +1,14 @@
 import 'dart:developer' as logger;
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
+import 'package:finca/main.dart';
+import 'package:finca/modules/farms_screen/models/soil_study_model/soil_study_model.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/src/widgets/framework.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:path_provider/path_provider.dart';
 
 class Utils {
   List<List<Map<String, double>>> convertPolygonsIntoMap(_polygons) {
@@ -30,14 +36,13 @@ class Utils {
     try {
       final result = await InternetAddress.lookup('www.google.com');
       if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-        logger.log('wifi connected');
         return true;
+      } else {
+        return false;
       }
     } on SocketException catch (_) {
-      logger.log('wifi not connected');
       return false;
     }
-    return false;
   }
 
   DateTime generateRandomDateWithinCurrentMonth() {
@@ -63,5 +68,33 @@ class Utils {
     DateTime randomDateTime = DateTime(now.year, now.month, randomDay);
 
     return randomDateTime;
+  }
+
+  Future<File> writeImageDataToFile(Uint8List imageData, String pictureId, String extension) async {
+    if (Platform.isAndroid) {
+      Directory appDocDir = await getApplicationDocumentsDirectory();
+      String filePath = '${appDocDir.path}/$pictureId.$extension';
+      File imageFile = File(filePath);
+      await imageFile.writeAsBytes(imageData);
+      logger.log('Image saved to android: $filePath');
+      return imageFile;
+    } else if (Platform.isIOS) {
+      Directory appDocDir = await getApplicationSupportDirectory();
+      String filePath = '${appDocDir.path}/$pictureId.$extension';
+      File imageFile = File(filePath);
+      await imageFile.writeAsBytes(imageData);
+      logger.log('Image saved to ios : $filePath');
+      return imageFile;
+    }
+    return File('');
+  }
+
+  Future<void> saveDataToHive(String uid, String farmId, String path) async {
+    final newData = SoilStudyModel(uid: uid, id: farmId, path: path);
+    await fincaPdfsBox.add(newData);
+  }
+
+  void showSnackBar(BuildContext context, String s) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s)));
   }
 }

@@ -1,166 +1,108 @@
 import 'dart:async';
-import 'dart:collection';
 import 'dart:convert';
-import 'dart:developer';
-import 'dart:typed_data';
+import 'dart:developer' as logger;
+import 'dart:math' as math;
 import 'dart:ui';
 import 'package:finca/assets/assets.dart';
+import 'package:finca/models/farms_screen/farm_model.dart';
 import 'package:finca/modules/farms_screen/pages/step_two_new_farm_screen.dart';
 import 'package:finca/utils/app_colors.dart';
 import 'package:finca/utils/app_strings.dart';
+import 'package:finca/utils/user_preferences.dart';
+import 'package:finca/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
+import 'package:mapbox_gl/mapbox_gl.dart';
+import 'package:location/location.dart' as offline_location;
 
 class StepOneNewFarmScreen extends StatefulWidget {
-  const StepOneNewFarmScreen({super.key});
+  final bool? isUpdating;
+  final FarmModel? farm;
+
+  const StepOneNewFarmScreen({
+    super.key,
+    this.isUpdating = false,
+    this.farm,
+  });
 
   @override
   State<StepOneNewFarmScreen> createState() => _StepOneNewFarmScreenState();
 }
 
 class _StepOneNewFarmScreenState extends State<StepOneNewFarmScreen> {
-  final List<LatLng> _polygonLatLngs = [];
-  final Set<Polygon> _polygons = HashSet<Polygon>();
-  final Set<Marker> _markers = HashSet<Marker>();
-  int _polygonIdCounter = 1;
-  int _markerIdCounter = 1;
   bool _isPolygonCompleted = false;
-  final TextEditingController _locationController = TextEditingController();
-  GoogleMapController? _mapController;
-  GlobalKey _screenshotKey = GlobalKey();
-
-  Future<LatLng> _searchLocation(String location) async {
-    const apiKey = 'AIzaSyC5OI76CdPB1YkSlMsSpxjwA0BUaOJROxU';
-    final endpoint = 'https://maps.googleapis.com/maps/api/geocode/json?address=$location&key=$apiKey';
-    final response = await http.get(Uri.parse(endpoint));
-    log('response.statusCode: ${response.statusCode}');
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> data = json.decode(response.body);
-      final results = data['results'];
-      if (results.isNotEmpty) {
-        log('results: ${results[0]['geometry']['location']}');
-        final location = results[0]['geometry']['location'];
-        final lat = location['lat'];
-        final lng = location['lng'];
-        return LatLng(lat, lng);
-      }
-    }
-
-    return const LatLng(0, 0); // Return default location if not found
-  }
-
-  Future<Uint8List?> getBytesFromAsset(String path, int width) async {
-    ByteData data = await rootBundle.load(path);
-    ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(), targetWidth: width);
-    ui.FrameInfo fi = await codec.getNextFrame();
-    return (await fi.image.toByteData(format: ui.ImageByteFormat.png))?.buffer.asUint8List();
-  }
-
-  void _addMarker(LatLng point) async {
-    final Uint8List? markerIcon = await getBytesFromAsset('assets/svg/circle.png', 30);
-    final String markerIdVal = 'marker_$_markerIdCounter';
-    final icon = markerIcon != null
-        ? BitmapDescriptor.fromBytes(markerIcon)
-        : BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen);
-    _markers.add(
-      Marker(
-        markerId: MarkerId(markerIdVal),
-        icon: icon,
-        position: point,
-      ),
-    );
-    setState(() {});
-    _markerIdCounter++;
-  }
-
-  void _setPolygon() {
-    final String polygonIdVal = 'polygon_$_polygonIdCounter';
-    _polygons.add(
-      Polygon(
-        polygonId: PolygonId(polygonIdVal),
-        points: _polygonLatLngs,
-        strokeWidth: 2,
-        strokeColor: Colors.green,
-        fillColor: Colors.green.withOpacity(0.5),
-      ),
-    );
-    _polygonIdCounter++;
-    _isPolygonCompleted = true;
-  }
-
-  void _onTap(LatLng point) {
-    if (!_isPolygonCompleted) {
-      if (_polygonLatLngs.isEmpty) {
-        setState(() {
-          _polygonLatLngs.add(point);
-          _addMarker(point);
-        });
-      } else if (_polygonLatLngs.length < 4) {
-        setState(() {
-          _polygonLatLngs.add(point);
-          _addMarker(point);
-        });
-
-        if (_polygonLatLngs.length == 4) {
-          _setPolygon();
-        }
-      }
-    }
-  }
-
-  void _undoLastPoint() {
-    if (!_isPolygonCompleted && _polygonLatLngs.isNotEmpty) {
-      setState(() {
-        _polygonLatLngs.removeLast();
-        _markers.remove(_markers.last);
-      });
-    }
-  }
-
-  void _deletePolygon() {
-    if (_polygons.isNotEmpty) {
-      setState(() {
-        _polygons.clear();
-        _markers.clear();
-        _polygonLatLngs.clear();
-        _isPolygonCompleted = false;
-      });
-    }
-  }
-
-  Future<Uint8List?> _captureScreenshot(BuildContext context) async {
-    try {
-      RenderRepaintBoundary boundary = _screenshotKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      Uint8List? pngBytes = byteData?.buffer.asUint8List();
-      return pngBytes;
-    } catch (e) {
-      print('Error capturing screenshot: $e');
-      return null;
-    }
-  }
-
-  Future<void> _uploadScreenshot(Uint8List imageBytes) async {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => StepTwoNewFarmScreen(
-          selectedPolygons: _polygons,
-          polygonImage: imageBytes,
-        ),
-      ),
-    );
-  }
+  final TextEditingController _locationTextFieldController = TextEditingController();
+  final GlobalKey _screenshotKey = GlobalKey();
+  MapboxMapController? controller;
+  final List<LatLng> _markerCoordinates = [];
+  final List<Line> _addedLines = [];
+  final List<Symbol> _addedSymbols = [];
+  bool isLocationSearch = false;
+  Future<Position?>? location;
+  offline_location.Location offlineLocation = offline_location.Location();
+  bool isCurrentLocationMarkerAdded = false;
+  double _currentZoom = 15.0;
 
   @override
-  void dispose() {
-    _locationController.dispose();
-    super.dispose();
+  void initState() {
+    Utils().checkIfInternetIsAvailable().then((isInternetAvailable) async {
+      if (isInternetAvailable) {
+        location = Geolocator.getCurrentPosition();
+        logger.log('lastKnownPosition: $location');
+      } else {
+        final currentLocationData = await getCurrentLocation();
+        location = Future.value(
+          Position.fromMap(
+            {
+              'latitude': currentLocationData?.latitude ?? 3.0136,
+              'longitude': currentLocationData?.longitude ?? -76.4844,
+            },
+          ),
+        );
+        logger.log('lastKnownPosition1: $location');
+      }
+      setState(() {});
+    });
+    super.initState();
+  }
+
+  Future<offline_location.LocationData?> getCurrentLocation() async {
+    final serviceEnabled = await offlineLocation.serviceEnabled();
+    if (serviceEnabled) {
+      final result = await offlineLocation.requestService();
+      if (result == true) {
+        final locationData = await offlineLocation.getLocation();
+        logger.log('Service has been enabled');
+        return locationData;
+      } else {
+        logger.log('Service has not been enabled');
+      }
+    }
+    return null;
+  }
+
+  void _onCurrentLocation() async {
+    var position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+    controller?.animateCamera(CameraUpdate.newLatLngZoom(LatLng(position.latitude, position.longitude), _currentZoom));
+  }
+
+  void _zoomIn() {
+    setState(() {
+      _currentZoom++;
+    });
+    controller?.animateCamera(CameraUpdate.zoomIn());
+  }
+
+  void _zoomOut() {
+    setState(() {
+      _currentZoom--;
+    });
+    controller?.animateCamera(CameraUpdate.zoomOut());
   }
 
   @override
@@ -172,17 +114,63 @@ class _StepOneNewFarmScreenState extends State<StepOneNewFarmScreen> {
           children: [
             RepaintBoundary(
               key: _screenshotKey,
-              child: GoogleMap(
-                initialCameraPosition: const CameraPosition(
-                  target: LatLng(45.521563, -122.677433),
-                  zoom: 11.0,
-                ),
-                markers: _markers,
-                polygons: _polygons,
-                onTap: _onTap,
-                onMapCreated: (controller) {
-                  _mapController = controller;
+              child: FutureBuilder(
+                future: location,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting || snapshot.data == null) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+                  logger.log('positioncheck: ${snapshot.data?.latitude} ${snapshot.data?.longitude}');
+                  return MapboxMap(
+                    accessToken:
+                        'sk.eyJ1IjoiZmluY2FzIiwiYSI6ImNsdWg4a2VvYzE1dGwyanJvYzVkdHdqcG8ifQ.jU1rupSVjgFgObCOj-9eWg',
+                    onMapCreated: (controller) {
+                      this.controller = controller;
+                    },
+                    onMapIdle: () {
+                      onMapIdle(snapshot);
+                    },
+                    onMapClick: _onMapTapCallback,
+                    styleString: 'mapbox://styles/mapbox/satellite-streets-v12',
+                    initialCameraPosition: CameraPosition(
+                      target: LatLng(snapshot.data?.latitude ?? 3.0136, snapshot.data?.longitude ?? -76.4844),
+                      zoom: 15,
+                    ),
+                  );
                 },
+              ),
+            ),
+            Positioned(
+              bottom: 100.0,
+              right: 10.0,
+              child: Column(
+                children: <Widget>[
+                  FloatingActionButton(
+                    heroTag: "current_location",
+                    onPressed: _onCurrentLocation,
+                    materialTapTargetSize: MaterialTapTargetSize.padded,
+                    backgroundColor: Colors.white,
+                    child: const Icon(Icons.my_location, size: 36.0),
+                  ),
+                  const SizedBox(height: 20),
+                  FloatingActionButton(
+                    heroTag: "zoom_in",
+                    onPressed: _zoomIn,
+                    materialTapTargetSize: MaterialTapTargetSize.padded,
+                    backgroundColor: Colors.white,
+                    child: const Icon(Icons.add, size: 36.0),
+                  ),
+                  const SizedBox(height: 20),
+                  FloatingActionButton(
+                    heroTag: "zoom_out",
+                    onPressed: _zoomOut,
+                    materialTapTargetSize: MaterialTapTargetSize.padded,
+                    backgroundColor: Colors.white,
+                    child: const Icon(Icons.remove, size: 36.0),
+                  ),
+                ],
               ),
             ),
             Positioned(
@@ -229,7 +217,7 @@ class _StepOneNewFarmScreenState extends State<StepOneNewFarmScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'New Farm',
+                              'Nueva Granja',
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.w700,
@@ -238,7 +226,7 @@ class _StepOneNewFarmScreenState extends State<StepOneNewFarmScreen> {
                               ),
                             ),
                             Text(
-                              'Step 1 of 4',
+                              'Paso 1 de 4',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -250,7 +238,7 @@ class _StepOneNewFarmScreenState extends State<StepOneNewFarmScreen> {
                               height: 15,
                             ),
                             Text(
-                              'Select the location of the farm',
+                              'Selecciona la ubicación de la finca',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w400,
@@ -275,22 +263,50 @@ class _StepOneNewFarmScreenState extends State<StepOneNewFarmScreen> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: TextField(
-                      controller: _locationController,
+                      controller: _locationTextFieldController,
                       decoration: InputDecoration(
                         border: InputBorder.none,
                         prefixIcon: const Icon(Icons.search),
-                        hintText: 'Find Location',
+                        hintText: 'Buscar ubicación',
                         suffixIcon: IconButton(
                           icon: const Icon(Icons.send),
                           onPressed: () async {
-                            final location = await _searchLocation(_locationController.text);
-                            _mapController?.animateCamera(CameraUpdate.newLatLngZoom(location, 12.0));
+                            await Utils().checkIfInternetIsAvailable().then((isInternetAvailable) {
+                              if (isInternetAvailable) {
+                                _searchLocation(_locationTextFieldController.text).then((location) {
+                                  controller?.animateCamera(
+                                    CameraUpdate.newLatLngZoom(location, 16.0),
+                                  );
+                                  saveToSharedPreference(location);
+                                });
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('No internet connection'),
+                                  ),
+                                );
+                              }
+                            });
                           },
                         ),
                       ),
                       onSubmitted: (value) async {
-                        final location = await _searchLocation(_locationController.text);
-                        _mapController?.animateCamera(CameraUpdate.newLatLngZoom(location, 12.0));
+                        await Utils().checkIfInternetIsAvailable().then((isInternetAvailable) {
+                          if (isInternetAvailable) {
+                            _searchLocation(value).then((location) {
+                              controller?.animateCamera(
+                                CameraUpdate.newLatLngZoom(location, 16.0),
+                              );
+                              saveToSharedPreference(location);
+                            });
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('No internet connection'),
+                              ),
+                            );
+                          }
+                        });
                       },
                     ),
                   ),
@@ -317,7 +333,7 @@ class _StepOneNewFarmScreenState extends State<StepOneNewFarmScreen> {
                     ),
                     child: InkWell(
                       onTap: () {
-                        _undoLastPoint();
+                        _undo();
                       },
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -352,7 +368,7 @@ class _StepOneNewFarmScreenState extends State<StepOneNewFarmScreen> {
                     ),
                     child: InkWell(
                       onTap: () {
-                        _deletePolygon();
+                        _clearLines();
                       },
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -377,7 +393,7 @@ class _StepOneNewFarmScreenState extends State<StepOneNewFarmScreen> {
                   GestureDetector(
                     onTap: () async {
                       if (_isPolygonCompleted) {
-                        log("selectedPolygons: ${_polygons.toList().toString()}");
+                        // log("selectedPolygons: ${_polygons.toList().toString()}");
                         Uint8List? imageBytes = await _captureScreenshot(context);
                         if (imageBytes != null) {
                           await _uploadScreenshot(imageBytes);
@@ -417,5 +433,193 @@ class _StepOneNewFarmScreenState extends State<StepOneNewFarmScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  void _onMapTapCallback(math.Point<double> point, LatLng coordinates) {
+    if (!_isPolygonCompleted) {
+      _addMarker(coordinates);
+    }
+  }
+
+  void _addMarker(LatLng coordinates) async {
+    final symbolOptions = SymbolOptions(
+      geometry: coordinates,
+      iconImage: "assets/svg/green_circle.png",
+    );
+    final symbol = await controller!.addSymbol(symbolOptions);
+    _markerCoordinates.add(coordinates);
+    _addedSymbols.add(symbol);
+    if (_markerCoordinates.length == 4) {
+      _createSquare(_markerCoordinates);
+      setState(() {
+        _isPolygonCompleted = true;
+      });
+    }
+  }
+
+  void _createSquare(var markerCoordinates) async {
+    final lines = <Line>[];
+    lines.add(await _addLine(markerCoordinates[0], markerCoordinates[1]));
+    lines.add(await _addLine(markerCoordinates[1], markerCoordinates[2]));
+    lines.add(await _addLine(markerCoordinates[2], markerCoordinates[3]));
+    lines.add(await _addLine(markerCoordinates[3], markerCoordinates[0]));
+    _addedLines.addAll(lines);
+  }
+
+  Future<Line> _addLine(LatLng point1, LatLng point2) async {
+    final lineOptions = LineOptions(
+      geometry: [point1, point2],
+      lineColor: "#ff0000",
+      lineWidth: 4.0,
+    );
+    return await controller!.addLine(lineOptions);
+  }
+
+  void _clearLines() {
+    _markerCoordinates.clear();
+    setState(() {
+      _isPolygonCompleted = false;
+    });
+    for (var symbol in _addedSymbols) {
+      controller!.removeSymbol(symbol);
+    }
+    for (var line in _addedLines) {
+      controller!.removeLine(line);
+    }
+    _addedSymbols.clear();
+    _addedLines.clear();
+  }
+
+  void _undo() {
+    if (_addedSymbols.isNotEmpty) {
+      final removedSymbol = _addedSymbols.removeLast();
+      _markerCoordinates.removeLast();
+      controller!.removeSymbol(removedSymbol);
+    }
+    if (_addedLines.isNotEmpty) {
+      final removedLine = _addedLines.removeLast();
+      controller!.removeLine(removedLine);
+    }
+    if (_markerCoordinates.length < 4) {
+      setState(() {
+        _isPolygonCompleted = false;
+      });
+    }
+  }
+
+  Future<LatLng> _searchLocation(String location) async {
+    const apiKey = 'AIzaSyC5OI76CdPB1YkSlMsSpxjwA0BUaOJROxU';
+    final endpoint = 'https://maps.googleapis.com/maps/api/geocode/json?address=$location&key=$apiKey';
+    final response = await http.get(Uri.parse(endpoint));
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = json.decode(response.body);
+      final results = data['results'];
+      if (results.isNotEmpty) {
+        final location = results[0]['geometry']['location'];
+        final lat = location['lat'];
+        final lng = location['lng'];
+        return LatLng(lat, lng);
+      }
+    }
+    return const LatLng(0, 0);
+  }
+
+  Future<Uint8List?> _captureScreenshot(BuildContext context) async {
+    try {
+      RenderRepaintBoundary boundary = _screenshotKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      Uint8List? pngBytes = byteData?.buffer.asUint8List();
+      return pngBytes;
+    } catch (e) {
+      logger.log('Error capturing screenshot: $e');
+      return null;
+    }
+  }
+
+  Future<void> _uploadScreenshot(Uint8List imageBytes) async {
+    List<LatLng> polygonPoints = [];
+    for (var i = 0; i < _markerCoordinates.length; i++) {
+      polygonPoints.add(_markerCoordinates[i]);
+    }
+    logger.log('polygonPoints: ${polygonPoints.toString()}');
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => StepTwoNewFarmScreen(
+          selectedPolygons: polygonPoints,
+          polygonImage: imageBytes,
+          isUpdating: widget.isUpdating,
+          farm: widget.farm,
+        ),
+      ),
+    );
+  }
+
+  void saveToSharedPreference(LatLng location) {
+    //save only if internet is available
+    UserPreferences().setString('last_known_latitude', location.latitude.toString());
+    UserPreferences().setString('last_known_longitude', location.longitude.toString());
+  }
+
+  void _adjustZoom(markerCoordinates) {
+    if (controller == null || markerCoordinates.isEmpty) return;
+
+    double minLat = markerCoordinates.first.latitude;
+    double maxLat = markerCoordinates.first.latitude;
+    double minLng = markerCoordinates.first.longitude;
+    double maxLng = markerCoordinates.first.longitude;
+
+    for (LatLng marker in markerCoordinates) {
+      if (marker.latitude < minLat) minLat = marker.latitude;
+      if (marker.latitude > maxLat) maxLat = marker.latitude;
+      if (marker.longitude < minLng) minLng = marker.longitude;
+      if (marker.longitude > maxLng) maxLng = marker.longitude;
+    }
+
+    LatLngBounds bounds = LatLngBounds(
+      southwest: LatLng(minLat, minLng),
+      northeast: LatLng(maxLat, maxLng),
+    );
+
+    controller?.animateCamera(
+      CameraUpdate.newLatLngBounds(
+        bounds,
+        left: 50,
+        right: 50,
+        top: 50,
+        bottom: 50,
+      ),
+    );
+  }
+
+  void onMapIdle(AsyncSnapshot<Position?> snapshot) async {
+    if (!isCurrentLocationMarkerAdded) {
+      await controller?.addSymbol(
+        SymbolOptions(
+          geometry: LatLng(snapshot.data?.latitude ?? 3.0136, snapshot.data?.longitude ?? -76.4844),
+          iconImage: "assets/svg/current_location.png",
+          iconSize: 3,
+        ),
+      );
+      final List<LatLng> calculateCoordinates = [];
+      for (int i = 0; i < ((widget.farm?.location.length) ?? 0); i++) {
+        LatLng latLng = LatLng(widget.farm?.location[i]['latitude'] ?? 0, widget.farm?.location[i]['longitude'] ?? 0);
+        calculateCoordinates.add(latLng);
+        _addMarker(latLng);
+        if (i == (widget.farm?.location.length ?? 0) - 1) {
+          _createSquare(calculateCoordinates);
+          setState(() {
+            _isPolygonCompleted = true;
+          });
+          _adjustZoom(calculateCoordinates);
+        }
+      }
+      isCurrentLocationMarkerAdded = true;
+    }
   }
 }

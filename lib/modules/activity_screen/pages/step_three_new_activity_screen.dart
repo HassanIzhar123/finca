@@ -6,10 +6,29 @@ import 'package:flutter/material.dart';
 
 import 'step_three_remaining_new_activity.dart';
 
-class StepThreeNewActivityScreen extends StatelessWidget {
-  const StepThreeNewActivityScreen({super.key, required this.selectedActivityType});
+class StepThreeNewActivityScreen extends StatefulWidget {
+  const StepThreeNewActivityScreen({
+    super.key,
+    required this.selectedActivityType,
+    required this.startDate,
+    required this.startTime,
+    required this.endDate,
+    required this.endTime,
+    required this.isAllDay,
+  });
 
+  final DateTime startDate, startTime, endDate, endTime;
+  final bool isAllDay;
   final String selectedActivityType;
+
+  @override
+  State<StepThreeNewActivityScreen> createState() => _StepThreeNewActivityScreenState();
+}
+
+class _StepThreeNewActivityScreenState extends State<StepThreeNewActivityScreen> {
+  String? chemicalName, details;
+
+  double? amount;
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +46,7 @@ class StepThreeNewActivityScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'New Activity',
+                  'Nueva Actividad',
                   style: TextStyle(
                     color: AppColors.greenColor,
                     fontWeight: FontWeight.w700,
@@ -44,20 +63,77 @@ class StepThreeNewActivityScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                const CustomTextField(name: '*Name', hintText: "Write a chemical name"),
-                const SizedBox(height: 20),
-                const CustomTextField(
-                  name: '*Amount',
-                  hintText: "0000",
-                  isNumberTextField: true,
+                CustomTextField(
+                  name: '*Nombre',
+                  hintText: "Escriba un nombre químico",
+                  onChange: (value) {
+                    chemicalName = value;
+                  },
                 ),
                 const SizedBox(height: 20),
-                const CustomTextField(name: '*Detail', hintText: "Write additional details here"),
+                CustomTextField(
+                  name: '*Cantidad',
+                  hintText: "0000",
+                  isNumberTextField: true,
+                  onChange: (value) {
+                    amount = double.parse(value);
+                  },
+                ),
+                const SizedBox(height: 20),
+                CustomTextField(
+                  name: '*Detalle',
+                  hintText: "Escriba detalles adicionales aquí",
+                  onChange: (value) {
+                    details = value;
+                  },
+                ),
                 const SizedBox(height: 20),
                 GestureDetector(
                   onTap: () {
-                    Navigator.of(context)
-                        .push(MaterialPageRoute(builder: (context) => const StepThreeRemainingNewActivity()));
+                    if (chemicalName?.isEmpty ?? true) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            AppStrings.chemicalNameEmpty,
+                          ),
+                        ),
+                      );
+                      return;
+                    } else if (amount == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            AppStrings.amountEmpty,
+                          ),
+                        ),
+                      );
+                      return;
+                    } else if (details?.isEmpty ?? true) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            AppStrings.detailsEmpty,
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => StepThreeRemainingNewActivity(
+                          startDate: widget.startDate,
+                          startTime: widget.startTime,
+                          endDate: widget.endDate,
+                          endTime: widget.endTime,
+                          isAllDay:widget.isAllDay,
+                          selectedActivityType: widget.selectedActivityType,
+                          chemicalName: chemicalName!,
+                          amount: amount!,
+                          details: details!,
+                        ),
+                      ),
+                    );
                   },
                   child: Container(
                     padding: const EdgeInsets.only(

@@ -3,12 +3,14 @@ class AuthModel {
   String password;
   String name;
   String? uid;
+  bool isGoogleSignedIn;
 
   AuthModel({
     required this.email,
     required this.password,
     required this.name,
     this.uid,
+    this.isGoogleSignedIn = false,
   });
 
   // String get uid => _uid!;
@@ -23,6 +25,7 @@ class AuthModel {
       "password": password,
       "name": name,
       "uid": uid,
+      "isGoogleSignedIn": isGoogleSignedIn,
     };
   }
 
@@ -37,6 +40,7 @@ class AuthModel {
       password: userMap['password'],
       name: userMap['name'],
       uid: userMap['uid'],
+      isGoogleSignedIn: userMap['isGoogleSignedIn'] ?? false,
     );
   }
 }

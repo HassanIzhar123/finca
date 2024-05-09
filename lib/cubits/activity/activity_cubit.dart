@@ -13,19 +13,41 @@ class ActivityCubit extends Cubit<ActivityState> {
   ActivityCubit() : super(ActivityInitial());
 
   void getAllFarms() async {
-    await Future.delayed(const Duration(seconds: 1));
+    await Future.delayed(const Duration(milliseconds: 1));
     emit(FarmsLoadingState());
     try {
       if (UserPreferences().getUserInfo()?.uid == null) {
         emit(const FarmsFailedState('User not found'));
         return;
       }
-      // log("userId: ${UserPreferences().getUserInfo()?.uid}");
-      final farmStream = _farmRepository.getAllFarms(UserPreferences().getUserInfo()?.uid ?? '');
+      final farmStream = await _farmRepository.getAllFarms(UserPreferences().getUserInfo()?.uid ?? '');
       emit(FarmsSuccessState(farmStream));
     } catch (e) {
       log(e.toString());
       emit(FarmsFailedState(e.toString()));
+    }
+  }
+
+  void getAllActivities() async {
+    await Future.delayed(const Duration(milliseconds: 1));
+    emit(ActivityLoadingState());
+    try {
+      final activities = await _activityRepository.getAllActivities();
+      emit(ActivitySuccessState(activities));
+    } catch (e) {
+      log(e.toString());
+      emit(ActivityFailedState(e.toString()));
+    }
+  }
+
+  Future<void> getActivities(String farm, DateTime focusedDay) async {
+    emit(ActivityDateLoadingState());
+    try {
+      final activities = _activityRepository.getActivities(farm, focusedDay);
+      emit(ActivityDateSuccessState(activities));
+    } catch (e,stacktrace) {
+      log(e.toString());
+      emit(ActivityDateFailedState(e.toString()));
     }
   }
 }

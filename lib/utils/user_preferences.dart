@@ -72,11 +72,11 @@ class UserPreferences {
     return _prefsInstance ??= await SharedPreferences.getInstance();
   }
 
-  static String getString(String key, [String? defValue]) {
+   String getString(String key, [String? defValue]) {
     return _prefsInstance?.getString(key) ?? defValue ?? "";
   }
 
-  static Future<bool> setString(String key, String value) async {
+  Future<bool> setString(String key, String value) async {
     var prefs = await _instance;
     return prefs.setString(key, value) ?? Future.value(false);
   }

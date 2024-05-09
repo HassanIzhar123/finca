@@ -25,3 +25,16 @@ class LogInFailedState extends LogInState {
 
   const LogInFailedState(this.message);
 }
+class GoogleLogInLoadingState extends LogInState {}
+
+class GoogleLogInSuccessState extends LogInState {
+  final bool isLoggedIn;
+
+  const GoogleLogInSuccessState(this.isLoggedIn);
+}
+
+class GoogleLogInFailedState extends LogInState {
+  final String message;
+
+  const GoogleLogInFailedState(this.message);
+}

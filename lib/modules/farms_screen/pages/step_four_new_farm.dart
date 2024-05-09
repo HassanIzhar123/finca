@@ -9,7 +9,7 @@ import 'package:finca/cubits/farms/farms_state.dart';
 import 'package:finca/models/farms_screen/farm_model.dart';
 import 'package:finca/modules/farms_screen/models/crop/Crop.dart';
 import 'package:finca/modules/farms_screen/models/tag.dart';
-import 'package:finca/services/storage_service.dart';
+import 'package:finca/modules/global/page/new_property_save_screen.dart';
 import 'package:finca/utils/app_colors.dart';
 import 'package:finca/utils/app_strings.dart';
 import 'package:finca/utils/collection_refs.dart';
@@ -19,13 +19,15 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:mapbox_gl/mapbox_gl.dart';
 
 class StepFourNewFarmScreen extends StatefulWidget {
   const StepFourNewFarmScreen({
     super.key,
-    required this.selectedCrops,
-    required this.name,
+    this.isUpdating = false,
+    this.farm,
+    required this.selectedCrop,
+    required this.farmName,
     required this.size,
     required this.selectedSoilType,
     this.description,
@@ -33,28 +35,24 @@ class StepFourNewFarmScreen extends StatefulWidget {
     required this.polygonImage,
   });
 
-  final List<Crop> selectedCrops;
-  final String name;
+  final bool? isUpdating;
+  final FarmModel? farm;
+  final Crop selectedCrop;
+  final String farmName;
   final String size;
   final Tag selectedSoilType;
   final String? description;
-  final Set<Polygon> selectedPolygons;
+  final List<LatLng> selectedPolygons;
   final Uint8List polygonImage;
 
   @override
-  _StepFourNewFarmScreenState createState() => _StepFourNewFarmScreenState();
+  State<StepFourNewFarmScreen> createState() => _StepFourNewFarmScreenState();
 }
 
 class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
-  final _soilStudyController = TextEditingController();
-  final _certificationController = TextEditingController();
-
-  // Mock data for dropdowns
   final List<String> soilStudies = ['Soil Study 1', 'Soil Study 2', 'Soil Study 3'];
-  final List<String> certifications = ['Certification 1', 'Certification 2', 'Certification 3'];
-
+  final List<Tag> certifications = [];
   String? selectedSoilStudy;
-
   String? selectedCertification;
   DateTime? selectedSoilDate = DateTime.now(), selectedCertificationDate = DateTime.now();
   List<File> attachedFiles = [];
@@ -62,8 +60,6 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
 
   @override
   initState() {
-    selectedSoilStudy = soilStudies[0];
-    selectedCertification = certifications[0];
     super.initState();
   }
 
@@ -74,7 +70,6 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
     );
 
     if (result != null) {
-      // PlatformFile file = result.files.first;
       File file = File(result.files.first.path!);
       setState(() {
         attachedFiles.add(file);
@@ -83,16 +78,9 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
   }
 
   @override
-  void dispose() {
-    _soilStudyController.dispose();
-    _certificationController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => FarmCubit(),
+      create: (context) => FarmCubit()..getAgriculturalCertifications(),
       child: BlocConsumer<FarmCubit, FarmsState>(
         listener: (context, state) {
           log('stepThreeNewFarmScreen: $state');
@@ -100,12 +88,48 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
             isLoading = true;
           } else if (state is AddFarmsSuccessState) {
             isLoading = false;
-            Navigator.of(context).pop();
-            Navigator.of(context).pop();
-            Navigator.of(context).pop();
-            Navigator.of(context).pop();
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => NewPropertySaveScreen(
+                  isUpdating: widget.isUpdating ?? false,
+                ),
+              ),
+            );
           } else if (state is AddFarmsFailedState) {
             isLoading = false;
+            log("error messgae:${state.message}");
+            _showErrorDialog();
+          } else if (state is AgriculturalCertificationSuccessState) {
+            certifications.clear();
+            certifications.addAll(state.soilTypes);
+            if (widget.isUpdating ?? false) {
+              if (widget.farm != null) {
+                for (var element in soilStudies) {
+                  if (element == widget.farm?.soilStudy) {
+                    selectedSoilStudy = element;
+                  }
+                }
+                selectedSoilDate = widget.farm?.soilStudyDate;
+                for (var element in certifications) {
+                  if (element.name == widget.farm?.agriculturalCertification) {
+                    selectedCertification = element.name;
+                  }
+                }
+                selectedCertificationDate = widget.farm?.agriculturalCertificationDate;
+                // for (int i = 0; i < (widget.farm?.soilStudyLink.length ?? 0); i++) {
+                //   String filename = getFilenameFromUrl(widget.farm?.soilStudyLink[i] ?? '');
+                //   log('fileName: $filename');
+                //   fileNames.add(filename);
+                // }
+              } else {
+                selectedSoilStudy = soilStudies[0];
+                selectedCertification = certifications[0].name;
+              }
+            } else {
+              selectedSoilStudy = soilStudies[0];
+              selectedCertification = certifications[0].name;
+            }
+          } else if (state is AgriculturalCertificationFailedState) {
             _showErrorDialog();
           }
         },
@@ -149,7 +173,7 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  AppStrings.newFarm,
+                                  (widget.isUpdating ?? false) ? AppStrings.editFarm : AppStrings.newFarm,
                                   style: TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.w700,
@@ -182,7 +206,7 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
                             children: [
                               const SizedBox(height: 20),
                               _buildDropdown(
-                                'Soil study:',
+                                "Estudio del suelo:",
                                 soilStudies,
                                 selectedSoilStudy,
                                 (value) {
@@ -191,7 +215,7 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
                                   });
                                 },
                               ),
-                              _buildDatePicker('Date:', selectedSoilDate, (value) {
+                              _buildDatePicker('Fecha:', selectedSoilDate, (value) {
                                 setState(() {
                                   selectedSoilDate = value;
                                 });
@@ -206,8 +230,8 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
                                 height: 20,
                               ),
                               _buildDropdown(
-                                'Agricultural Certifications obtained:',
-                                certifications,
+                                'Certificaciones agrícolas obtenidas:',
+                                certifications.map((e) => e.name).toList(),
                                 selectedCertification,
                                 (value) {
                                   setState(() {
@@ -218,7 +242,7 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
                               const SizedBox(
                                 height: 10,
                               ),
-                              _buildDatePicker('Date:', selectedCertificationDate, (value) {
+                              _buildDatePicker('Fecha:', selectedCertificationDate, (value) {
                                 setState(() {
                                   selectedCertificationDate = value;
                                 });
@@ -232,22 +256,21 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
                                         if (checkIfFieldsAreEmpty()) {
                                           _showErrorDialog();
                                         } else {
-                                          String farmId = CollectionRefs.instance
-                                              .crops(UserPreferences().getUserInfo()?.uid ?? '')
-                                              .id;
                                           if (context.mounted) {
                                             context.read<FarmCubit>().addNewFarm(
-                                                  farmId,
-                                                  widget.name,
+                                                  widget.farm,
+                                                  widget.farmName,
                                                   double.parse(widget.size),
+                                                  widget.selectedSoilType.name,
                                                   widget.description ?? '',
                                                   widget.selectedPolygons,
-                                                  widget.selectedCrops,
+                                                  widget.selectedCrop,
                                                   selectedSoilStudy ?? '',
                                                   selectedSoilDate ?? DateTime.now(),
                                                   attachedFiles,
                                                   selectedCertification ?? '',
                                                   selectedCertificationDate ?? DateTime.now(),
+                                                  isUpdating: widget.isUpdating,
                                                 );
                                           }
                                         }
@@ -256,7 +279,7 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
                                   child: isLoading
                                       ? const CupertinoActivityIndicator()
                                       : const Text(
-                                          'Finish',
+                                          'Finalizar',
                                           style: TextStyle(
                                             fontSize: 14,
                                             fontWeight: FontWeight.bold,
@@ -279,6 +302,14 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
         },
       ),
     );
+  }
+
+  String getFilenameFromUrl(String url) {
+    List<String> parts = url.split('/');
+    String lastPart = parts.last;
+    String decodedPart = Uri.decodeFull(lastPart);
+    String filename = decodedPart.split('?').first.split('Farms/').last;
+    return filename;
   }
 
   Widget _buildDropdown(String title, List<String> items, String? selectedItem, Function(String? value) onChanged) {
@@ -377,6 +408,7 @@ class _StepFourNewFarmScreenState extends State<StepFourNewFarmScreen> {
       icon: Assets.calendarIcon,
       iconOnLeft: false,
       isCalendarPicker: true,
+      initialSelectedDate: selectedDate ?? DateTime.now(),
       onDateSelected: (selectedDate) {
         onDateSelected(selectedDate);
       },

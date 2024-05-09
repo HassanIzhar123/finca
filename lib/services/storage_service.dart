@@ -10,9 +10,18 @@ class StorageService {
 
   static final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  static Future<String> uploadFileWithUIntList(String path, Uint8List fileData) async {
+  static Future<String> uploadFileWithUIntList(
+    String path,
+    Uint8List fileData, {
+    bool isUpdating = false,
+  }) async {
     try {
       final storageReference = _storage.ref().child(path);
+      if (isUpdating) {
+        try {
+          await storageReference.delete();
+        } catch (e) {}
+      }
       final uploadTask = storageReference.putData(fileData);
 
       await uploadTask.whenComplete(() => null);

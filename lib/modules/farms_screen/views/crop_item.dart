@@ -3,6 +3,7 @@ import 'package:finca/enums/sowing_enum.dart';
 import 'package:finca/modules/farms_screen/models/crop/Crop.dart';
 import 'package:finca/modules/farms_screen/pages/step_three_new_farm_screen.dart';
 import 'package:finca/utils/app_colors.dart';
+import 'package:finca/utils/app_strings.dart';
 import 'package:finca/views/step_progress_view.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -16,18 +17,19 @@ class CropItem extends StatelessWidget {
     required this.crop,
     required this.index,
     required this.isSelected,
+    required this.onEditCrop,
     required this.isCropDeleting,
     required this.onDeleteCrop,
     required this.onSelectCrop,
   });
 
   final Function(Crop crop) onDeleteCrop;
+  final Function(Crop crop) onEditCrop;
   final Function(int index) onSelectCrop;
   final int index;
   final bool isCropDeleting;
   final bool isSelected;
   final Crop crop;
-  final _stepsText = const ["Sowing", "In Progress", "Harvest"];
 
   final _stepCircleRadius = 5.0;
 
@@ -106,7 +108,7 @@ class CropItem extends StatelessWidget {
                           // bottom: 10,
                         ),
                         child: Text(
-                          crop.cropName,
+                          crop.cropNames.join(', '),
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w500,
@@ -140,10 +142,20 @@ class CropItem extends StatelessWidget {
                           shrinkWrap: true,
                           scrollDirection: Axis.horizontal,
                           physics: const NeverScrollableScrollPhysics(),
-                          children: crop.varieties.map((variety) => VarietyView(varietyName: variety)).toList(),
+                          children: crop.cropNames.map((variety) => VarietyView(varietyName: variety)).toList(),
                         ),
                       ),
                     ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {
+                    onEditCrop(crop);
+                  },
+                  padding: const EdgeInsets.all(0),
+                  icon: const Icon(
+                    Icons.edit,
+                    size: 15,
                   ),
                 ),
               ],
@@ -152,7 +164,7 @@ class CropItem extends StatelessWidget {
               height: 20,
             ),
             StepProgressView(
-              _stepsText,
+              AppStrings.stepsText,
               (SowingEnum.values.indexOf(crop.sowing)) + 1,
               _stepProgressViewHeight,
               MediaQuery.of(context).size.width,
@@ -223,7 +235,7 @@ class CropItem extends StatelessWidget {
                                 width: 5,
                               ),
                               Text(
-                                Assets.eliminate,
+                                AppStrings.eliminate,
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w400,

@@ -1,4 +1,5 @@
 import 'package:finca/assets/assets.dart';
+import 'package:finca/modules/activity_screen/models/activity_model.dart';
 import 'package:finca/utils/app_colors.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -10,17 +11,19 @@ class TableCalender extends StatefulWidget {
   const TableCalender({
     super.key,
     required this.focusedDay,
+    required this.events,
     required this.isNoteBookSelected,
     required this.onCalendarTap,
     required this.onNotebookTap,
-    required this.onFocusedDayChanged, // New callback
+    required this.onFocusedDayChanged,
   });
 
   final DateTime focusedDay;
+  final List<ActivityModel> events;
   final bool isNoteBookSelected;
   final VoidCallback onCalendarTap;
   final VoidCallback onNotebookTap;
-  final void Function(DateTime focusedDay) onFocusedDayChanged; // New callback signature
+  final void Function(DateTime focusedDay) onFocusedDayChanged;
 
   @override
   State<TableCalender> createState() => _TableCalenderState();
@@ -31,17 +34,19 @@ class _TableCalenderState extends State<TableCalender> {
   final _rangeSelectionMode = RangeSelectionMode.toggledOff;
   DateTime? _rangeStart;
   DateTime? _rangeEnd;
-  late ValueNotifier<DateTime> _focusedDayNotifier; // New
+  late ValueNotifier<DateTime> _focusedDayNotifier;
 
   @override
   void initState() {
     super.initState();
-    _focusedDayNotifier = ValueNotifier<DateTime>(widget.focusedDay);
+    _focusedDayNotifier = ValueNotifier<DateTime>(
+      widget.focusedDay,
+    );
   }
 
   @override
   void dispose() {
-    _focusedDayNotifier.dispose(); // Dispose the ValueNotifier
+    _focusedDayNotifier.dispose();
     super.dispose();
   }
 
@@ -51,6 +56,7 @@ class _TableCalenderState extends State<TableCalender> {
       _rangeStart = null;
       _rangeEnd = null;
     });
+    widget.onFocusedDayChanged(focusedDay);
   }
 
   @override
@@ -58,13 +64,11 @@ class _TableCalenderState extends State<TableCalender> {
     return ValueListenableBuilder<DateTime>(
       valueListenable: _focusedDayNotifier,
       builder: (context, focusedDay, child) {
-        widget.onFocusedDayChanged(focusedDay);
         return Container(
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(24),
           ),
-          // padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 18),
           margin: const EdgeInsets.only(bottom: 30),
           child: Column(
             children: [
@@ -72,14 +76,18 @@ class _TableCalenderState extends State<TableCalender> {
                 isNoteBookSelected: widget.isNoteBookSelected,
                 focusedDay: focusedDay,
                 onLeftArrowTap: () {
+                  final newDate = _focusedDayNotifier.value.subtract(const Duration(days: 30));
                   setState(() {
-                    _focusedDayNotifier.value = _focusedDayNotifier.value.subtract(const Duration(days: 30));
+                    _focusedDayNotifier.value = newDate;
                   });
+                  widget.onFocusedDayChanged(newDate);
                 },
                 onRightArrowTap: () {
+                  final newDate = _focusedDayNotifier.value.add(const Duration(days: 30));
                   setState(() {
-                    _focusedDayNotifier.value = _focusedDayNotifier.value.add(const Duration(days: 30));
+                    _focusedDayNotifier.value = newDate;
                   });
+                  widget.onFocusedDayChanged(newDate);
                 },
                 onCalendarTap: () {
                   widget.onCalendarTap();
@@ -110,8 +118,9 @@ class _TableCalenderState extends State<TableCalender> {
                   rangeEndDay: _rangeEnd,
                   calendarFormat: _calendarFormat,
                   rangeSelectionMode: _rangeSelectionMode,
-                  eventLoader: (_) => [DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day)],
-                  // Use your function to load events here
+                  eventLoader: (_) => widget.events.map((e) {
+                    return DateTime(e.startDate.year, e.startDate.month, e.startDate.day);
+                  }).toList(),
                   onDaySelected: _onDaySelected,
                   pageAnimationCurve: Curves.ease,
                   pageAnimationDuration: const Duration(milliseconds: 500),
@@ -122,9 +131,7 @@ class _TableCalenderState extends State<TableCalender> {
                     });
                   },
                   onPageChanged: (focusedDay) {
-                    setState(() {
-                      _focusedDayNotifier.value = focusedDay;
-                    });
+                    _focusedDayNotifier.value = focusedDay;
                   },
                   calendarBuilders: CalendarBuilders(
                     selectedBuilder: (_, day, focusedDay) => Container(

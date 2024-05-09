@@ -1,4 +1,4 @@
-package com.example.finca
+package com.orixity.app_fincas
 
 import io.flutter.embedding.android.FlutterActivity
 
